@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/homepage/homepage_view.dart';
 import 'package:handy/features/practice/practice_view.dart';
+import 'package:handy/features/profile/profile_view.dart';
 
 class AppNavigationShell extends StatefulWidget {
   const AppNavigationShell({super.key});
@@ -17,7 +18,7 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: const [HomepageView(), PracticeView(), _ProfilePlaceholder()],
+        children: const [HomepageView(), PracticeView(), ProfileView()],
       ),
       bottomNavigationBar: AppBottomNavbar(
         currentIndex: _currentIndex,
@@ -26,30 +27,6 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
             _currentIndex = index;
           });
         },
-      ),
-    );
-  }
-}
-
-class _ProfilePlaceholder extends StatelessWidget {
-  const _ProfilePlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Scaffold(
-      backgroundColor: Color(0xFFF1F4F8),
-      body: SafeArea(
-        child: Center(
-          child: Text(
-            'Profile',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              color: Color(0xFF14181B),
-              fontSize: 24,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
       ),
     );
   }
