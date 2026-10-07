@@ -70,8 +70,9 @@ class _LessonFlowState extends State<LessonFlow> {
       child: Scaffold(
         backgroundColor: AppColors.grayLight,
         body: SafeArea(
+          bottom: false,
           child: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 40),
+            padding: EdgeInsets.zero,
             child: Column(
               children: [
                 Padding(

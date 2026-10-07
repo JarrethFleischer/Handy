@@ -1,15 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/camera/view/camera_view.dart';
+import 'package:handy/theme/app_colors.dart';
 
 class QuizView extends StatelessWidget {
   const QuizView({super.key});
-
-  static const _primaryBackground = Color(0xFFF1F4F8);
-  static const _secondaryBackground = Colors.white;
-  static const _primaryText = Color(0xFF14181B);
-  static const _secondaryText = Color(0xFF57636C);
-  static const _primary = Color(0xFF249689);
-  static const _border = Color(0xFFADD8E6);
 
   static const _quizItems = [
     'Hello',
@@ -24,10 +18,8 @@ class QuizView extends StatelessWidget {
     final passed = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
-        builder: (context) => CameraView(
-          purpose: CameraPurpose.liveTest,
-          expectedSign: sign,
-        ),
+        builder: (context) =>
+            CameraView(purpose: CameraPurpose.liveTest, expectedSign: sign),
       ),
     );
     if (passed == true && context.mounted) {
@@ -45,11 +37,11 @@ class QuizView extends StatelessWidget {
         FocusManager.instance.primaryFocus?.unfocus();
       },
       child: Scaffold(
-        backgroundColor: _primaryBackground,
+        backgroundColor: Colors.white,
         body: SafeArea(
           top: true,
           child: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 20),
+            padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -59,16 +51,16 @@ class QuizView extends StatelessWidget {
                   constraints: const BoxConstraints(),
                   icon: const Icon(
                     Icons.arrow_back,
-                    color: _primaryText,
+                    color: AppColors.textDark,
                     size: 24,
                   ),
                 ),
                 const SizedBox(height: 20),
                 const Text(
-                  'Choose a sign',
+                  'Quiz',
                   style: TextStyle(
                     fontFamily: 'Inter',
-                    color: _primaryText,
+                    color: AppColors.textDark,
                     fontSize: 24,
                     fontWeight: FontWeight.w600,
                   ),
@@ -78,7 +70,7 @@ class QuizView extends StatelessWidget {
                   'Select a word to begin practicing',
                   style: TextStyle(
                     fontFamily: 'Inter',
-                    color: _secondaryText,
+                    color: AppColors.textDark,
                     fontSize: 14,
                   ),
                 ),
@@ -131,7 +123,7 @@ class _QuizCard extends StatelessWidget {
     return Opacity(
       opacity: isLocked ? 0.55 : 1,
       child: Material(
-        color: QuizView._secondaryBackground,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(14),
         child: InkWell(
           onTap: onTap,
@@ -140,7 +132,7 @@ class _QuizCard extends StatelessWidget {
             alignment: Alignment.center,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              border: Border.all(color: QuizView._border),
+              border: Border.all(color: AppColors.blueDark),
               borderRadius: BorderRadius.circular(14),
               boxShadow: const [
                 BoxShadow(
@@ -162,7 +154,7 @@ class _QuizCard extends StatelessWidget {
                   ),
                   child: Icon(
                     isLocked ? Icons.lock : Icons.sign_language_outlined,
-                    color: QuizView._primary,
+                    color: AppColors.blueDark,
                     size: 23,
                   ),
                 ),
@@ -174,7 +166,7 @@ class _QuizCard extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontFamily: 'Inter',
-                    color: QuizView._primaryText,
+                    color: AppColors.textDark,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),

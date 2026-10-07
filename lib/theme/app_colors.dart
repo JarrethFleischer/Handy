@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Design and text colors from the app palette.
 class AppColors {
   const AppColors._();
 
@@ -20,4 +19,7 @@ class AppColors {
   static const textLight = Color(0xFFE9F6FF);
   static const textNavy = Color(0xFF00344B);
   static const textDark = Color(0xFF272727);
+
+  static const correct = Color(0xFF237A22);
+  static const incorrect = Color(0xFFC93B2B);
 }

@@ -180,47 +180,42 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
                     ),
                   ],
                 ),
-                if (_hasSubmitted)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 14),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          _allCorrect ? Icons.check_circle : Icons.cancel,
-                          color: _allCorrect
-                              ? AppColors.blueDark
-                              : Colors.redAccent,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _allCorrect
-                              ? 'All matches are correct!'
-                              : 'Some matches are incorrect',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: _allCorrect
-                                ? AppColors.blueDark
-                                : Colors.redAccent,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 const SizedBox(height: 14),
               ],
             ),
           ),
         ),
-        LessonButton(
-          label: !_hasSubmitted
-              ? 'Check matches'
-              : _allCorrect
-              ? 'Finish lesson'
-              : 'Try again',
-          onPressed: _allAnswered ? _handleContinue : null,
+        AnimatedSwitcher(
+          duration: const Duration(milliseconds: 280),
+          switchInCurve: Curves.easeOut,
+          transitionBuilder: (child, animation) {
+            final slide = Tween<Offset>(
+              begin: const Offset(0, 1),
+              end: Offset.zero,
+            ).animate(animation);
+            return SlideTransition(position: slide, child: child);
+          },
+          child: _hasSubmitted && _allCorrect
+              ? _AnswerSheet(
+                  color: AppColors.correct,
+                  icon: Icons.check_circle,
+                  title: 'Correct!',
+                  buttonLabel: 'Continue',
+                  onPressed: widget.onContinue,
+                )
+              : _hasSubmitted
+              ? _AnswerSheet(
+                  color: AppColors.incorrect,
+                  icon: Icons.cancel,
+                  title: 'Incorrect',
+                  buttonLabel: 'Continue',
+                  onPressed: widget.onContinue,
+                )
+              : LessonButton(
+                  key: const ValueKey('match-check'),
+                  label: 'Check matches',
+                  onPressed: _allAnswered ? _handleContinue : null,
+                ),
         ),
       ],
     );
@@ -282,16 +277,22 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
         height: 58,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          color: answer == null ? AppColors.gray : const Color(0xFFE8F5F3),
+          color: answer == null
+              ? AppColors.gray
+              : isCorrect
+              ? AppColors.correct.withValues(alpha: 0.18)
+              : isWrong
+              ? AppColors.incorrect.withValues(alpha: 0.12)
+              : const Color(0xFFE8F5F3),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isCorrect
-                ? AppColors.blueDark
+                ? AppColors.correct
                 : isWrong
-                ? Colors.redAccent
+                ? AppColors.incorrect
                 : answer == null
                 ? AppColors.gray
-                : AppColors.blueDark,
+                : AppColors.correct,
             width: _hasSubmitted || answer != null ? 2 : 1,
           ),
         ),
@@ -354,6 +355,78 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AnswerSheet extends StatelessWidget {
+  const _AnswerSheet({
+    required this.color,
+    required this.icon,
+    required this.title,
+    required this.buttonLabel,
+    required this.onPressed,
+  });
+
+  final Color color;
+  final IconData icon;
+  final String title;
+  final String buttonLabel;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomInset),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  color: color,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 48,
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: color,
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                textStyle: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              child: Text(buttonLabel),
+            ),
+          ),
+        ],
       ),
     );
   }

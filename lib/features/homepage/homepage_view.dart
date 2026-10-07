@@ -65,7 +65,7 @@ class _HomepageViewState extends State<HomepageView> {
   Future<void> _loadHomepage() async {
     await Future.wait([
       precacheImage(const AssetImage('assets/images/background.png'), context),
-      precacheImage(const AssetImage('assets/images/coin.png'), context),
+      precacheImage(const AssetImage('assets/images/trophy.png'), context),
       precacheImage(const AssetImage('assets/images/streak.png'), context),
     ]);
     if (mounted) {
@@ -87,11 +87,10 @@ class _HomepageViewState extends State<HomepageView> {
           width: double.infinity,
           height: double.infinity,
           decoration: BoxDecoration(
-            color: AppColors.blueLight,
             image: const DecorationImage(
               image: AssetImage('assets/images/background.png'),
               fit: BoxFit.cover,
-              opacity: 0.4,
+              opacity: 0.5,
             ),
           ),
           child: SafeArea(
@@ -109,7 +108,7 @@ class _HomepageViewState extends State<HomepageView> {
                         mainAxisSize: MainAxisSize.max,
                         children: [
                           Image.asset(
-                            'assets/images/coin.png',
+                            'assets/images/trophy.png',
                             width: 24,
                             height: 24,
                           ),
@@ -182,6 +181,7 @@ class _HomepageViewState extends State<HomepageView> {
                           icon: Icons.check_circle,
                           iconColor: Color(0xFF386BF6),
                           isLoading: _isLoading,
+                          progressValue: 1,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -198,6 +198,7 @@ class _HomepageViewState extends State<HomepageView> {
                           icon: Icons.play_circle,
                           iconColor: Color(0xFF386BF6),
                           isLoading: _isLoading,
+                          progressValue: 0.25,
                           onTap: () {
                             Navigator.push(
                               context,
@@ -214,6 +215,7 @@ class _HomepageViewState extends State<HomepageView> {
                           icon: Icons.lock,
                           iconColor: AppColors.blueLight,
                           isLoading: _isLoading,
+                          progressValue: 0,
                         ),
                         const _LessonSpacer(),
                         _LessonCard(
@@ -222,6 +224,7 @@ class _HomepageViewState extends State<HomepageView> {
                           icon: Icons.lock,
                           iconColor: AppColors.blueLight,
                           isLoading: _isLoading,
+                          progressValue: 0,
                         ),
                       ],
                     ),
@@ -257,6 +260,7 @@ class _HomepageViewState extends State<HomepageView> {
                           subtitle: 'Discover new Vocabulary',
                           icon: Icons.check_circle,
                           iconColor: Color(0xFF386BF6),
+                          progressValue: 1,
                           isLoading: _isLoading,
                           onTap: () {
                             Navigator.push(
@@ -273,6 +277,7 @@ class _HomepageViewState extends State<HomepageView> {
                           subtitle: 'Discover new Vocabulary',
                           icon: Icons.play_circle,
                           iconColor: AppColors.blueLight,
+                          progressValue: 0.25,
                           isLoading: _isLoading,
                           onTap: () {
                             Navigator.push(
@@ -289,6 +294,7 @@ class _HomepageViewState extends State<HomepageView> {
                           subtitle: 'Practice a dialogue',
                           icon: Icons.play_circle,
                           iconColor: AppColors.blueLight,
+                          progressValue: 0,
                           isLoading: _isLoading,
                           onTap: () {
                             Navigator.push(
@@ -305,6 +311,7 @@ class _HomepageViewState extends State<HomepageView> {
                           subtitle: 'Practice with your camera',
                           icon: Icons.play_circle,
                           iconColor: AppColors.blueLight,
+                          progressValue: 0,
                           isLoading: _isLoading,
                           onTap: () {
                             Navigator.push(
@@ -392,7 +399,7 @@ class _ChapterCard extends StatelessWidget {
           width: double.infinity,
           constraints: const BoxConstraints(minHeight: 150),
           decoration: BoxDecoration(
-            color: AppColors.grayLight,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: const Color(0xFF9CCFFD), width: 2),
             boxShadow: [
@@ -472,6 +479,7 @@ class _ChapterCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                     child: LinearProgressIndicator(
                       value: progressValue,
+                      borderRadius: BorderRadius.circular(10),
                       minHeight: 10,
                       backgroundColor: Color(0xFFC4C4C4),
                       valueColor: const AlwaysStoppedAnimation<Color>(
@@ -497,7 +505,7 @@ class _LessonSpacer extends StatelessWidget {
     return Container(
       width: 10,
       height: 10,
-      decoration: const BoxDecoration(color: AppColors.grayLight),
+      decoration: const BoxDecoration(color: AppColors.white),
     );
   }
 }
@@ -508,6 +516,7 @@ class _LessonCard extends StatelessWidget {
     required this.subtitle,
     required this.icon,
     required this.iconColor,
+    this.progressValue = 0,
     this.onTap,
     this.isLoading = false,
   });
@@ -516,6 +525,7 @@ class _LessonCard extends StatelessWidget {
   final String subtitle;
   final IconData icon;
   final Color iconColor;
+  final double progressValue;
   final VoidCallback? onTap;
   final bool isLoading;
 
@@ -530,7 +540,7 @@ class _LessonCard extends StatelessWidget {
           width: double.infinity,
           constraints: const BoxConstraints(minHeight: 80),
           decoration: BoxDecoration(
-            color: AppColors.grayLight,
+            color: AppColors.white,
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: AppColors.grayLight),
           ),
@@ -539,10 +549,8 @@ class _LessonCard extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.max,
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment
-                  .center, // Aligns texts and icon vertically centered
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // Expanded ensures the column takes up available space and text wraps safely
                 Expanded(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -553,9 +561,7 @@ class _LessonCard extends StatelessWidget {
                         style: HomepageView._title,
                         isLoading: isLoading,
                       ),
-                      const SizedBox(
-                        height: 4,
-                      ), // Small spacing between title and subtitle
+                      const SizedBox(height: 4),
                       ShimmerText(
                         subtitle,
                         style: HomepageView._body,
@@ -564,14 +570,72 @@ class _LessonCard extends StatelessWidget {
                     ],
                   ),
                 ),
-                const SizedBox(
-                  width: 15,
-                ), // Spacing between the text block and the icon
-                Icon(icon, color: iconColor, size: 34),
+                const SizedBox(width: 15),
+                _LessonBadge(
+                  locked: icon == Icons.lock,
+                  progress: progressValue,
+                ),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _LessonBadge extends StatelessWidget {
+  const _LessonBadge({required this.locked, required this.progress});
+
+  final bool locked;
+  final double progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final isComplete = progress >= 1;
+
+    return SizedBox(
+      width: 36,
+      height: 36,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Positioned.fill(
+            child: CircularProgressIndicator(
+              value: progress,
+              strokeWidth: 14,
+              backgroundColor: AppColors.gray,
+              color: isComplete ? AppColors.yellowDark : AppColors.blueDark,
+            ),
+          ),
+          Container(
+            width: 40,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: const BoxDecoration(
+              color: AppColors.white,
+              shape: BoxShape.circle,
+            ),
+            child: locked
+                ? const Icon(Icons.lock, color: Color(0xFF8A8A8A), size: 18)
+                : isComplete
+                ? Image.asset(
+                    'assets/images/trophy.png',
+                    width: 22,
+                    height: 22,
+                    fit: BoxFit.contain,
+                  )
+                : Text(
+                    '${(progress * 100).round()}%',
+                    style: const TextStyle(
+                      fontFamily: 'Inter',
+                      color: AppColors.textDark,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+          ),
+        ],
       ),
     );
   }

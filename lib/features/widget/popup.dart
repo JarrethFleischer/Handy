@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:handy/theme/app_colors.dart';
 
 Future<bool> showLeaveLessonDialog(BuildContext context) async {
   final shouldLeave = await showDialog<bool>(
@@ -40,8 +41,8 @@ Future<bool> showLeaveLessonDialog(BuildContext context) async {
                   child: OutlinedButton(
                     onPressed: () => Navigator.pop(dialogContext, false),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: const Color(0xFF249689),
-                      side: const BorderSide(color: Color(0xFF249689)),
+                      foregroundColor: AppColors.blueDark,
+                      side: const BorderSide(color: AppColors.blueDark),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),
                       ),
@@ -57,7 +58,7 @@ Future<bool> showLeaveLessonDialog(BuildContext context) async {
                   child: FilledButton(
                     onPressed: () => Navigator.pop(dialogContext, true),
                     style: FilledButton.styleFrom(
-                      backgroundColor: const Color(0xFF249689),
+                      backgroundColor: AppColors.blueDark,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(10),

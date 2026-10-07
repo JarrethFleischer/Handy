@@ -54,7 +54,7 @@ class LearnSignQuestion extends StatelessWidget {
                 fontFamily: 'Inter',
                 color: AppColors.textDark,
                 fontSize: 18,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w400,
               ),
               textAlign: TextAlign.center,
             ),
@@ -75,8 +75,10 @@ class LessonButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+      padding: EdgeInsets.fromLTRB(20, 0, 20, 16 + bottomInset),
       child: SizedBox(
         height: 50,
         width: double.infinity,

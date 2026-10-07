@@ -10,6 +10,7 @@ import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hand_landmarker/hand_landmarker.dart';
+import 'package:handy/theme/app_colors.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Live camera preview using the [camera] plugin.
@@ -960,8 +961,8 @@ class _PracticeOverlay extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: started ? null : onStart,
-      child: ColoredBox(
-        color: started ? const Color(0x33000000) : const Color(0x8A000000),
+      child: Container(
+        color: started ? Colors.transparent : const Color(0x33000000),
         child: Padding(
           padding: EdgeInsets.fromLTRB(20, top + 12, 20, 28),
           child: Column(
@@ -979,11 +980,12 @@ class _PracticeOverlay extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(20),
                       child: LinearProgressIndicator(
+                        borderRadius: BorderRadius.circular(10),
                         value: progress,
                         minHeight: 14,
                         backgroundColor: const Color(0x66FFFFFF),
                         valueColor: const AlwaysStoppedAnimation<Color>(
-                          Colors.white,
+                          AppColors.blueDark,
                         ),
                       ),
                     ),
@@ -1031,15 +1033,7 @@ class _PracticeOverlay extends StatelessWidget {
                   height: 1.25,
                 ),
               ),
-              const Spacer(),
-              Container(
-                width: 64,
-                height: 64,
-                decoration: const BoxDecoration(
-                  color: Colors.black,
-                  shape: BoxShape.circle,
-                ),
-              ),
+              SizedBox(height: 30),
             ],
           ),
         ),

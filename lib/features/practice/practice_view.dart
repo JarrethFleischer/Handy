@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:handy/features/practice/name_the_sign/name_the_sign_view.dart';
 import 'package:handy/features/practice/quiz/quiz_view.dart';
 import 'package:handy/theme/app_colors.dart';
 
@@ -13,52 +14,62 @@ class PracticeView extends StatelessWidget {
         FocusManager.instance.primaryFocus?.unfocus();
       },
       child: Scaffold(
-        backgroundColor: AppColors.grayLight,
-        body: SafeArea(
-          top: true,
-          child: Padding(
-            padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 20, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'Practice',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    color: AppColors.textDark,
-                    fontSize: 24,
-                    fontWeight: FontWeight.w600,
+        body: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            image: const DecorationImage(
+              image: AssetImage('assets/images/background.png'),
+              fit: BoxFit.cover,
+              opacity: 0.5,
+            ),
+          ),
+          child: SafeArea(
+            top: true,
+            child: Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 20, 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Practice',
+                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
                   ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Refresh what you\'ve learned and build confidence',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    color: AppColors.textDark,
-                    fontSize: 14,
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Refresh what you\'ve learned and build confidence',
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      color: AppColors.textDark,
+                      fontSize: 14,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 20),
-                _PracticeCard(
-                  icon: Icons.videocam_outlined,
-                  title: 'Quiz',
-                  subtitle: 'Practice your movement using camera AI',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(builder: (context) => QuizView()),
-                    );
-                  },
-                ),
-                const SizedBox(height: 20),
-                _PracticeCard(
-                  icon: Icons.quiz_outlined,
-                  title: 'Flashcard',
-                  subtitle: 'Try to remember, then see if you got it right',
-                  onTap: () {},
-                ),
-              ],
+                  const SizedBox(height: 20),
+                  _PracticeCard(
+                    icon: Icons.videocam_outlined,
+                    title: 'Quiz',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => QuizView()),
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  _PracticeCard(
+                    icon: Icons.quiz_outlined,
+                    title: 'Name the sign',
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const NameTheSignView(),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -71,13 +82,11 @@ class _PracticeCard extends StatelessWidget {
   const _PracticeCard({
     required this.icon,
     required this.title,
-    required this.subtitle,
     required this.onTap,
   });
 
   final IconData icon;
   final String title;
-  final String subtitle;
   final VoidCallback onTap;
 
   @override
@@ -119,18 +128,10 @@ class _PracticeCard extends StatelessWidget {
                         fontFamily: 'Inter',
                         color: AppColors.textDark,
                         fontSize: 17,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(
-                      subtitle,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        color: AppColors.textDark,
-                        fontSize: 13,
-                      ),
-                    ),
                   ],
                 ),
               ),

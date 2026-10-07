@@ -74,38 +74,28 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
           ),
         ),
         ...widget.options.map(_buildOption),
-        if (_hasSubmitted)
-          Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  _isCorrect ? Icons.check_circle : Icons.cancel,
-                  color: _isCorrect ? AppColors.blueDark : Colors.redAccent,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _isCorrect ? 'Correct!' : 'Try again',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: _isCorrect ? AppColors.blueDark : Colors.redAccent,
-                  ),
-                ),
-              ],
-            ),
-          ),
         const Spacer(),
-        LessonButton(
-          label: !_hasSubmitted
-              ? 'Continue'
-              : _isCorrect
-              ? 'Finish lesson'
-              : 'Try again',
-          onPressed: _selectedAnswer == null ? null : _handleContinue,
-        ),
+        if (_hasSubmitted && _isCorrect)
+          _AnswerSheet(
+            color: AppColors.correct,
+            icon: Icons.check_circle,
+            title: 'Correct!',
+            buttonLabel: 'Next question',
+            onPressed: widget.onContinue,
+          )
+        else if (_hasSubmitted)
+          _AnswerSheet(
+            color: AppColors.incorrect,
+            icon: Icons.cancel,
+            title: 'Incorrect',
+            buttonLabel: 'Continue',
+            onPressed: widget.onContinue,
+          )
+        else
+          LessonButton(
+            label: 'Continue',
+            onPressed: _selectedAnswer == null ? null : _handleContinue,
+          ),
       ],
     );
   }
@@ -116,20 +106,17 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
 
     Color borderColor = AppColors.blueLight;
     Color backgroundColor = Colors.white;
-    IconData? trailingIcon;
 
     if (!_hasSubmitted && isSelected) {
       borderColor = AppColors.blueDark;
       backgroundColor = AppColors.blueDark.withValues(alpha: 0.06);
     } else if (_hasSubmitted) {
-      if (isCorrectOption) {
-        borderColor = AppColors.blueDark;
-        backgroundColor = AppColors.blueDark.withValues(alpha: 0.1);
-        trailingIcon = Icons.check_circle;
+      if (isCorrectOption && isSelected) {
+        borderColor = AppColors.correct;
+        backgroundColor = AppColors.correct.withValues(alpha: 0.18);
       } else if (isSelected) {
-        borderColor = Colors.redAccent;
-        backgroundColor = Colors.redAccent.withValues(alpha: 0.1);
-        trailingIcon = Icons.cancel;
+        borderColor = AppColors.incorrect;
+        backgroundColor = AppColors.incorrect.withValues(alpha: 0.12);
       }
     }
 
@@ -158,22 +145,94 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(
-                    option,
-                    style: const TextStyle(
-                      fontFamily: 'Inter',
-                      color: AppColors.textDark,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
+                  child: Center(
+                    child: Text(
+                      option,
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        color: AppColors.textDark,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w400,
+                      ),
                     ),
                   ),
                 ),
-                if (trailingIcon != null)
-                  Icon(trailingIcon, color: borderColor),
               ],
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _AnswerSheet extends StatelessWidget {
+  const _AnswerSheet({
+    required this.color,
+    required this.icon,
+    required this.title,
+    required this.buttonLabel,
+    required this.onPressed,
+  });
+
+  final Color color;
+  final IconData icon;
+  final String title;
+  final String buttonLabel;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+
+    return Container(
+      width: double.infinity,
+      padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomInset),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.14),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 22),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  color: color,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            height: 48,
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: onPressed,
+              style: ElevatedButton.styleFrom(
+                elevation: 0,
+                backgroundColor: color,
+                foregroundColor: AppColors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(28),
+                ),
+                textStyle: const TextStyle(
+                  fontFamily: 'Inter',
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              child: Text(buttonLabel),
+            ),
+          ),
+        ],
       ),
     );
   }
