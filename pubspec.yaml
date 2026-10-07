@@ -16,6 +16,8 @@ dependencies:
   tflite_flutter: ^0.12.1
   video_player: ^2.11.1
   shimmer: ^3.0.0
+  flutter_svg: ^2.3.0
+  country_picker: ^2.0.28
 
 dev_dependencies:
   flutter_test:

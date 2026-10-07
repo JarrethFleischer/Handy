@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:handy/features/navbar/navbar.dart';
+import 'package:handy/features/profile/profile_view.dart';
 
 void main() {
   runApp(const MainApp());
@@ -10,6 +10,6 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const MaterialApp(home: AppNavigationShell());
+    return const MaterialApp(home: ProfileView());
   }
 }
