@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class EditProfileView extends StatefulWidget {
+  const EditProfileView({super.key});
+
   //const EditProfileView({super.key});
 
   @override
@@ -22,7 +24,12 @@ class _EditProfileViewState extends State<EditProfileView> {
     super.dispose();
   }
 
-  Widget _buildTextField(String label, IconData icon, TextEditingController controller, {int maxLines = 1}) {
+  Widget _buildTextField(
+    String label,
+    IconData icon,
+    TextEditingController controller, {
+    int maxLines = 1,
+  }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 20.0),
       child: Column(
@@ -49,7 +56,10 @@ class _EditProfileViewState extends State<EditProfileView> {
               decoration: InputDecoration(
                 prefixIcon: Icon(icon, color: Colors.grey),
                 border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 16,
+                ),
               ),
             ),
           ),
@@ -74,7 +84,10 @@ class _EditProfileViewState extends State<EditProfileView> {
               decoration: BoxDecoration(
                 color: const Color(0xFF9AD5FF),
                 borderRadius: BorderRadius.vertical(
-                  bottom: Radius.elliptical(MediaQuery.of(context).size.width, 120),
+                  bottom: Radius.elliptical(
+                    MediaQuery.of(context).size.width,
+                    120,
+                  ),
                 ),
               ),
             ),
@@ -85,10 +98,17 @@ class _EditProfileViewState extends State<EditProfileView> {
             child: Align(
               alignment: Alignment.topLeft,
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0, vertical: 8.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8.0,
+                  vertical: 8.0,
+                ),
                 child: TextButton.icon(
                   onPressed: () => Navigator.pop(context),
-                  icon: const Icon(Icons.arrow_back_ios, size: 16, color: Color(0xFF14304A)),
+                  icon: const Icon(
+                    Icons.arrow_back_ios,
+                    size: 16,
+                    color: Color(0xFF14304A),
+                  ),
                   label: const Text(
                     'Back',
                     style: TextStyle(
@@ -100,7 +120,10 @@ class _EditProfileViewState extends State<EditProfileView> {
                   style: TextButton.styleFrom(
                     backgroundColor: Colors.transparent, // No background
                     foregroundColor: const Color(0xFF14304A),
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
                   ),
                 ),
               ),
@@ -111,12 +134,11 @@ class _EditProfileViewState extends State<EditProfileView> {
           SafeArea(
             child: Padding(
               // Pushes the content down so it doesn't overlap the back button
-              padding: const EdgeInsets.only(top: 60.0), 
+              padding: const EdgeInsets.only(top: 60.0),
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
                   children: [
-                    
                     // --- EDITABLE AVATAR ---
                     Stack(
                       alignment: Alignment.bottomRight,
@@ -141,21 +163,44 @@ class _EditProfileViewState extends State<EditProfileView> {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFD465), // Yellow from your theme
+                            color: const Color(
+                              0xFFFFD465,
+                            ), // Yellow from your theme
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.black, width: 1.5),
                           ),
-                          child: const Icon(Icons.camera_alt, color: Colors.black87, size: 20),
+                          child: const Icon(
+                            Icons.camera_alt,
+                            color: Colors.black87,
+                            size: 20,
+                          ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 32),
 
                     // --- FORM FIELDS ---
-                    _buildTextField('Username', Icons.person_outline, _username),
-                    _buildTextField('Phone Number', Icons.phone_outlined, _phone),
-                    _buildTextField('Email Address', Icons.email_outlined, _email),
-                    _buildTextField('About Me', Icons.edit_note, _bio, maxLines: 3),
+                    _buildTextField(
+                      'Username',
+                      Icons.person_outline,
+                      _username,
+                    ),
+                    _buildTextField(
+                      'Phone Number',
+                      Icons.phone_outlined,
+                      _phone,
+                    ),
+                    _buildTextField(
+                      'Email Address',
+                      Icons.email_outlined,
+                      _email,
+                    ),
+                    _buildTextField(
+                      'About Me',
+                      Icons.edit_note,
+                      _bio,
+                      maxLines: 3,
+                    ),
 
                     const SizedBox(height: 24),
 
@@ -170,16 +215,22 @@ class _EditProfileViewState extends State<EditProfileView> {
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side: const BorderSide(color: Colors.black, width: 1.5), 
+                            side: const BorderSide(
+                              color: Colors.black,
+                              width: 1.5,
+                            ),
                           ),
                         ),
                         onPressed: () {
-                          FocusScope.of(context).unfocus(); 
+                          FocusScope.of(context).unfocus();
                           Navigator.pop(context);
                         },
                         child: const Text(
                           'Save Changes',
-                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 18,
+                          ),
                         ),
                       ),
                     ),
