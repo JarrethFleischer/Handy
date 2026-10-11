@@ -31,6 +31,86 @@ class PracticeView extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 0.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // BIM Pill (Mock Dropdown - currently disabled)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade300),
+                          ),
+                          child: Row(
+                            children: [
+                              const Text(
+                                '🇲🇾',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'BIM',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 16,
+                                color: Colors.grey[600],
+                              ), // Dropdown arrow
+                            ],
+                          ),
+                        ),
+
+                        // Trophies and Streaks (Using SVG placeholders)
+                        Row(
+                          children: [
+                            Image.asset(
+                              'assets/images/coin.png',
+                              width: 20,
+                              height: 20,
+                            ),
+                            const SizedBox(width: 4),
+                            const Text(
+                              '0',
+                              style: TextStyle(
+                                color: Color(0xFF14304A),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+
+                            Image.asset(
+                              'assets/images/streak.png',
+                              width: 20,
+                              height: 20,
+                            ),
+                            const SizedBox(width: 4),
+                            const Text(
+                              '3',
+                              style: TextStyle(
+                                color: Color(0xFFFA6C5E),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 10),
                   const Text(
                     'Practice',
                     style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
@@ -46,7 +126,7 @@ class PracticeView extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   _PracticeCard(
-                    icon: Icons.videocam_outlined,
+                    icon: Icons.videocam_rounded,
                     title: 'Quiz',
                     onTap: () {
                       Navigator.push(
@@ -57,7 +137,7 @@ class PracticeView extends StatelessWidget {
                   ),
                   const SizedBox(height: 20),
                   _PracticeCard(
-                    icon: Icons.quiz_outlined,
+                    icon: Icons.quiz,
                     title: 'Name the sign',
                     onTap: () {
                       Navigator.push(
@@ -99,7 +179,7 @@ class _PracticeCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
         child: Container(
           width: double.infinity,
-          constraints: const BoxConstraints(minHeight: 100),
+          constraints: const BoxConstraints(minHeight: 80),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
             border: Border.all(color: AppColors.blueLight),
@@ -110,11 +190,7 @@ class _PracticeCard extends StatelessWidget {
               Container(
                 width: 50,
                 height: 50,
-                decoration: BoxDecoration(
-                  color: AppColors.blueLight.withValues(alpha: 0.45),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(icon, color: AppColors.blueDark, size: 26),
+                child: Icon(icon, color: AppColors.blueLight, size: 36),
               ),
               const SizedBox(width: 14),
               Expanded(
@@ -138,7 +214,7 @@ class _PracticeCard extends StatelessWidget {
               const SizedBox(width: 8),
               const Icon(
                 Icons.chevron_right,
-                color: AppColors.textDark,
+                color: AppColors.blueLight,
                 size: 24,
               ),
             ],
