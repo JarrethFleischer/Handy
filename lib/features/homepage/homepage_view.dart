@@ -65,7 +65,7 @@ class _HomepageViewState extends State<HomepageView> {
   Future<void> _loadHomepage() async {
     await Future.wait([
       precacheImage(const AssetImage('assets/images/background.png'), context),
-      precacheImage(const AssetImage('assets/images/trophy.png'), context),
+      precacheImage(const AssetImage('assets/images/coin.png'), context),
       precacheImage(const AssetImage('assets/images/streak.png'), context),
     ]);
     if (mounted) {
@@ -96,55 +96,88 @@ class _HomepageViewState extends State<HomepageView> {
           child: SafeArea(
             top: true,
             child: SingleChildScrollView(
-              padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 20),
+              padding: const EdgeInsetsDirectional.fromSTEB(20, 16, 20, 20),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.max,
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    children: [
-                      Row(
-                        mainAxisSize: MainAxisSize.max,
-                        children: [
-                          Image.asset(
-                            'assets/images/trophy.png',
-                            width: 24,
-                            height: 24,
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 0.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // BIM Pill (Mock Dropdown - currently disabled)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 10,
+                            vertical: 4,
                           ),
-                          const SizedBox(width: 8),
-                          ShimmerText(
-                            '2',
-                            style: HomepageView._body,
-                            isLoading: _isLoading,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(color: Colors.grey.shade300),
                           ),
-                        ],
-                      ),
-                      Padding(
-                        padding: const EdgeInsetsDirectional.fromSTEB(
-                          20,
-                          0,
-                          0,
-                          0,
+                          child: Row(
+                            children: [
+                              const Text(
+                                '🇲🇾',
+                                style: TextStyle(fontSize: 16),
+                              ),
+                              const SizedBox(width: 6),
+                              const Text(
+                                'BIM',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 12,
+                                  color: Colors.black87,
+                                ),
+                              ),
+                              const SizedBox(width: 4),
+                              Icon(
+                                Icons.keyboard_arrow_down,
+                                size: 16,
+                                color: Colors.grey[600],
+                              ), // Dropdown arrow
+                            ],
+                          ),
                         ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.max,
+
+                        // Trophies and Streaks (Using SVG placeholders)
+                        Row(
                           children: [
                             Image.asset(
-                              'assets/images/streak.png',
-                              width: 24,
-                              height: 24,
+                              'assets/images/coin.png',
+                              width: 20,
+                              height: 20,
                             ),
-                            const SizedBox(width: 8),
-                            ShimmerText(
+                            const SizedBox(width: 4),
+                            const Text(
                               '0',
-                              style: HomepageView._body,
-                              isLoading: _isLoading,
+                              style: TextStyle(
+                                color: Color(0xFF14304A),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+
+                            Image.asset(
+                              'assets/images/streak.png',
+                              width: 20,
+                              height: 20,
+                            ),
+                            const SizedBox(width: 4),
+                            const Text(
+                              '3',
+                              style: TextStyle(
+                                color: Color(0xFFFA6C5E),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                   Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
@@ -154,7 +187,7 @@ class _HomepageViewState extends State<HomepageView> {
                       progress: '1 of 4 lessons completed',
                       progressValue: 0.25,
                       icon: Icons.play_circle,
-                      iconColor: const Color(0xFF386BF6),
+                      iconColor: AppColors.blueLight,
                       isLoading: _isLoading,
                       isExpanded: _isChapterOneExpanded,
                       onTap: () {
@@ -179,7 +212,7 @@ class _HomepageViewState extends State<HomepageView> {
                           title: 'Lesson 1',
                           subtitle: 'Discover new Vocabulary',
                           icon: Icons.check_circle,
-                          iconColor: Color(0xFF386BF6),
+                          iconColor: AppColors.blueLight,
                           isLoading: _isLoading,
                           progressValue: 1,
                           onTap: () {
@@ -239,7 +272,7 @@ class _HomepageViewState extends State<HomepageView> {
                         progress: '0 of 4 lessons completed',
                         progressValue: 0.0,
                         icon: Icons.lock,
-                        iconColor: Color(0xFF386BF6),
+                        iconColor: AppColors.blueLight,
                         isLoading: _isLoading,
                       ),
                     ),
@@ -404,7 +437,7 @@ class _ChapterCard extends StatelessWidget {
             border: Border.all(color: const Color(0xFF9CCFFD), width: 2),
             boxShadow: [
               BoxShadow(
-                color: const Color.fromARGB(255, 0, 136, 255).withOpacity(0.5),
+                color: AppColors.blueLight.withOpacity(1),
                 blurRadius: 10,
                 offset: const Offset(0, 4),
               ),
@@ -425,7 +458,7 @@ class _ChapterCard extends StatelessWidget {
                       width: 85,
                       height: 24,
                       decoration: BoxDecoration(
-                        color: const Color(0xFF9CCFFD),
+                        color: AppColors.blueLight,
                         borderRadius: BorderRadius.circular(5),
                       ),
                       child: Column(
@@ -483,7 +516,7 @@ class _ChapterCard extends StatelessWidget {
                       minHeight: 10,
                       backgroundColor: Color(0xFFC4C4C4),
                       valueColor: const AlwaysStoppedAnimation<Color>(
-                        Color(0xFF386BF6),
+                        AppColors.blueDark,
                       ),
                     ),
                   ),

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/profile/profile_edit.dart';
+import 'package:handy/features/login/login.dart';
+import 'package:handy/theme/app_colors.dart';
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
@@ -7,18 +9,18 @@ class ProfileView extends StatelessWidget {
   // Helper widget to build the settings rows cleanly
   Widget _buildListTile(IconData icon, String title) {
     return ListTile(
-      leading: Icon(icon, color: const Color(0xFFA0D3FF)), // Light blue icons
+      leading: Icon(icon, color: AppColors.blueLight), // Light blue icons
       title: Text(
         title,
         style: const TextStyle(
-          fontWeight: FontWeight.bold,
+          fontWeight: FontWeight.w500,
           color: Color(0xFF14304A), // Dark navy text
         ),
       ),
       trailing: const Icon(
         Icons.arrow_forward_ios,
         size: 16,
-        color: Color(0xFF67B5FF),
+        color: AppColors.blueLight,
       ),
       onTap: () {}, // Empty action for now
     );
@@ -38,7 +40,7 @@ class ProfileView extends StatelessWidget {
             child: Container(
               height: 200,
               decoration: BoxDecoration(
-                color: const Color(0xFF9AD5FF), // Sky blue header
+                color: AppColors.blueLight, // Sky blue header
                 borderRadius: BorderRadius.vertical(
                   bottom: Radius.elliptical(
                     MediaQuery.of(context).size.width,
@@ -57,8 +59,8 @@ class ProfileView extends StatelessWidget {
                   // --- TOP BAR (Language & Streaks) ---
                   Padding(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 24.0,
-                      vertical: 12.0,
+                      horizontal: 20.0,
+                      vertical: 16.0,
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -171,7 +173,7 @@ class ProfileView extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(
                         color: Colors.black,
-                        width: 2,
+                        width: 1,
                       ), // Black stroke
                     ),
                     padding: const EdgeInsets.all(
@@ -248,7 +250,7 @@ class ProfileView extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                         side: const BorderSide(
                           color: Colors.black,
-                          width: 1.5,
+                          width: 1,
                         ), // Black stroke
                       ),
                       child: Column(
@@ -277,7 +279,7 @@ class ProfileView extends StatelessWidget {
                   // --- LOGOUT BUTTON ---
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFFA6C5E), // Coral Red
+                      backgroundColor: AppColors.incorrect, // Coral Red
                       foregroundColor: Colors.white,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
@@ -288,7 +290,12 @@ class ProfileView extends StatelessWidget {
                         vertical: 14,
                       ),
                     ),
-                    onPressed: () {}, // Empty action
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                      );
+                    }, // Empty action
                     child: const Text(
                       'Logout',
                       style: TextStyle(
