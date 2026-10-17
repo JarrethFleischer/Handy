@@ -1,15 +1,23 @@
 from sqlalchemy.orm import Session
+import random
 from fastapi import HTTPException, status
 from app.models.user import User, UserDetails
-from app.schemas.userSchema import UserCreate, UserUpdate, LoginSchema, UserDetailsResponse
+from app.schemas.userSchema import UserCreate, UserUpdate, LoginSchema, UserDetailsResponse, VerifyOTPAndResetPassword
 from app.helpers.format_helper import format_api_response
 from app.helpers.security import hashPassword, verifyPassword, createAccessToken, revokeToken
 from datetime import datetime, timezone, timedelta
 from fastapi.security import OAuth2PasswordRequestForm
+from app.models.bridge import bridge
+from fastapi_mail import FastMail, MessageSchema, MessageType
+from app.config.email import mail_config
+
+MYT = timezone(timedelta(hours=8))
+
+def getMyyTime():
+    return datetime.now(MYT)
 
 def getAllUsers(db: Session, skip: int = 0, limit: int = 100):
-    users = db.query(User).filter(User.userStatus == 1).offset(skip).limit(limit).all()
-    return users
+    return db.query(User).filter(User.userStatus == 1).offset(skip).limit(limit).all()
 
 def getUserByID(userID: int, db: Session):
     userByID = db.query(User).filter(User.userID == userID).first()
@@ -21,37 +29,38 @@ def getUserByID(userID: int, db: Session):
     return userByID
 
 def createUser(userData: UserCreate, db: Session):
-    # Check for existing user
     existingUser = db.query(User).filter(User.userUsername == userData.userUsername).first()
-    
     if existingUser:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"An account with username/email '{userData.userUsername}' already exists."
         )
     
-    # Hashed password
     hashedPwd = hashPassword(userData.userPassword)
-    
-    # Create new user
     newUser = User(
-        userUsername = userData.userUsername,
-        userPassword = hashedPwd,
-        userStatus = userData.userStatus or 1
+        userName=userData.userName,
+        userUsername=userData.userUsername,
+        userPassword=hashedPwd,
+        userStatus=userData.userStatus or 1
     )
-    
     db.add(newUser)
     db.flush()
     
-    # Create user details
     newUserDetails = UserDetails(
-        userDetailsUserID = newUser.userID,
-        userDetailsLevel = 0,
-        userDetailsXP = 0,
-        userDetailsStreakCount = 0
+        userDetailsUserID=newUser.userID,
+        userDetailsLevel=1,
+        userDetailsXP=0,
+        userDetailsStreakCount=0
     )
-    
     db.add(newUserDetails)
+    
+    initialBridge = bridge(
+        bridgeUserID=newUser.userID,
+        bridgeChapterID=1,
+        bridgeProgress="0"
+    )
+    db.add(initialBridge)
+    
     db.commit()
     db.refresh(newUser)
     return newUser
@@ -60,7 +69,6 @@ def updateUser(userID: int, userData: UserUpdate, db: Session):
     userByID = getUserByID(userID, db)
     updateUserData = userData.model_dump(exclude_unset=True) 
     
-    # If update username, check existing
     if "userUsername" in updateUserData and updateUserData["userUsername"] != userByID.userUsername:
         existing = db.query(User).filter(User.userUsername == updateUserData["userUsername"]).first()
         if existing:
@@ -69,7 +77,6 @@ def updateUser(userID: int, userData: UserUpdate, db: Session):
                 detail=f"Username/email '{updateUserData['userUsername']}' is already in use."
             )
     
-    # Hash password if password update
     if "userPassword" in updateUserData and updateUserData["userPassword"]:
         updateUserData["userPassword"] = hashPassword(updateUserData["userPassword"])
         
@@ -91,14 +98,13 @@ def deleteUser(userID: int, db: Session):
         f"User {userID} disabled successfully",
         userByID
     )
-    
+
 def verifyUserCredentials(username: str, plain_password: str, db: Session):
     user = db.query(User).filter(User.userUsername == username).first()
     if not user or not verifyPassword(plain_password, user.userPassword):
         return False
     return user
 
-# Calculation for user XP and Level
 def calculateLevelFromTotalXP(totalXP: int) -> int:
     return (totalXP // 500) + 1
 
@@ -117,6 +123,27 @@ def addUserXP(userID: int, xpGained: int, db: Session):
     leveledUp = new_level > old_level
     details.userDetailsLevel = new_level
     
+    currentChapter = new_level
+    progressWithinChapter = str(details.userDetailsXP % 500)
+    
+    existingBridge = db.query(bridge).filter(
+        bridge.bridgeUserID == userID,
+        bridge.bridgeChapterID == currentChapter
+    ).first()
+    
+    if existingBridge:
+        existingBridge.bridgeProgress = progressWithinChapter
+        existingBridge.bridgeDateUpdated = getMyyTime()  # Fixed typo and tuple
+    else:
+        newBridge = bridge(
+            bridgeUserID=userID,
+            bridgeChapterID=currentChapter,
+            bridgeProgress=progressWithinChapter,
+            bridgeDateCreated=getMyyTime(),
+            bridgeDateUpdated=getMyyTime()
+        )
+        db.add(newBridge)
+    
     db.commit()
     db.refresh(details)
     
@@ -126,7 +153,7 @@ def addUserXP(userID: int, xpGained: int, db: Session):
         "levelUp": leveledUp,
         "details": UserDetailsResponse.model_validate(details)
     }
-    
+
 def updateUserStreak(userID: int, streakCount: int, db: Session):
     details = db.query(UserDetails).filter(UserDetails.userDetailsUserID == userID).first()
     if not details:
@@ -139,12 +166,6 @@ def updateUserStreak(userID: int, streakCount: int, db: Session):
     db.commit()
     db.refresh(details)
     return details
-
-# Update streak automatically
-
-MYT = timezone(timedelta(hours=8))
-def getMyyTime():
-    return datetime.now(MYT)
 
 def logDailyActivity(userID: int, db: Session):
     details = db.query(UserDetails).filter(UserDetails.userDetailsUserID == userID).first()
@@ -161,7 +182,6 @@ def logDailyActivity(userID: int, db: Session):
         details.userDetailsStreakCount = 1
         statusFlag = "incremented"
         message = "Streak started!"
-        
     else:
         lastDate = details.userDetailsLastActivity.date()
         daysDiff = (todayDate - lastDate).days
@@ -169,14 +189,13 @@ def logDailyActivity(userID: int, db: Session):
         if daysDiff == 0:
             return {
                 "message": "Activity already logged today. Streak remains unchanged.",
-                "streak_count": details.streakCount,
+                "streak_count": details.userDetailsStreakCount,  # Fixed bug: was details.streakCount
                 "status": "already_logged"
             }
         elif daysDiff == 1:
             details.userDetailsStreakCount += 1
             statusFlag = "incremented"
             message = "Streak maintained and incremented!"
-            
         else:
             details.userDetailsStreakCount = 1
             statusFlag = "reset_and_incremented"
@@ -191,12 +210,10 @@ def logDailyActivity(userID: int, db: Session):
         "streak_count": details.userDetailsStreakCount,
         "status": statusFlag
     }
-    
-# Login & Logout
+
 def loginUser(credential: LoginSchema, db: Session):
     user = db.query(User).filter(User.userUsername == credential.username).first()
     
-    # Verify user exists and password is valid
     if not user or not verifyPassword(credential.password, user.userPassword):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -204,7 +221,6 @@ def loginUser(credential: LoginSchema, db: Session):
             headers={"WWW-Authenticate": "Bearer"},
         )
         
-    # Check if account is disabled (userStatus = 2)
     if user.userStatus != 1:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -212,7 +228,7 @@ def loginUser(credential: LoginSchema, db: Session):
         )
         
     tokenData = {"sub": str(user.userID), "username": user.userUsername}
-    accessToken = createAccessToken(data = tokenData)
+    accessToken = createAccessToken(data=tokenData)
     
     return {
         "status": "success",
@@ -220,14 +236,14 @@ def loginUser(credential: LoginSchema, db: Session):
         "access_token": accessToken,
         "token_type": "bearer"
     }
-    
+
 def logoutUser(token: str):
     revokeToken(token)
     return {
         "status": "success",
         "message": "Logged out successfully"
     }
-    
+
 def getCurrentUser(payload: dict, db: Session):
     userID = int(payload.get("sub"))
     user = db.query(User).filter(User.userID == userID).first()
@@ -237,3 +253,92 @@ def getCurrentUser(payload: dict, db: Session):
             detail="User not found"
         )
     return user
+
+# Email OTP Store
+otpStore = {}
+
+async def sendPasswordResetOTP(username: str, db: Session):
+    user = db.query(User).filter(User.userUsername == username).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Account with email '{username}' does not exist."
+        )
+        
+    otpCode = f"{random.randint(100000, 999999)}"  # Recommend 6-digit OTP
+    expiresAt = getMyyTime() + timedelta(minutes=10)
+    
+    otpStore[username] = {
+        "otp": otpCode,
+        "expiresAt": expiresAt
+    }
+    
+    htmlContent = f"""
+    <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+        <h2>Password Reset Request</h2>
+        <p>You requested a password reset for your account.</p>
+        <p>Your One-Time Password (OTP) is:</p>
+        <h1 style="color: #4CAF50; letter-spacing: 4px;">{otpCode}</h1>
+        <p>This code will expire in <strong>10 minutes</strong>.</p>
+        <p>If you did not request this, please ignore this email.</p>
+    </div>
+    """
+    
+    message = MessageSchema(
+        subject="Your Password Reset OTP",
+        recipients=[username],
+        body=htmlContent,
+        subtype=MessageType.html
+    )
+    
+    fm = FastMail(mail_config)
+    await fm.send_message(message)
+    
+    return {
+        "status": "success",
+        "message": f"OTP successfully sent to {username}"
+    }
+
+def resetPasswordWithOTP(payload: VerifyOTPAndResetPassword, db: Session):
+    username = payload.userUsername
+    record = otpStore.get(username)
+    
+    if not record:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No OTP requested for this email or OTP has expired."
+        )
+        
+    if getMyyTime() > record["expiresAt"]:
+        del otpStore[username]
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="OTP code has expired. Please request a new one."
+        )
+        
+    if record["otp"] != payload.otpCode:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid OTP code."
+        )
+        
+    user = db.query(User).filter(User.userUsername == username).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found."
+        )
+        
+    # --- CRITICAL FIX: Hash & Update Password ---
+    user.userPassword = hashPassword(payload.newPassword)
+    
+    if hasattr(user, "userDateUpdated"):
+        user.userDateUpdated = getMyyTime()
+        
+    db.commit()
+    del otpStore[username]
+    
+    return {
+        "status": "success",
+        "message": "Password successfully reset. You can now log in with your new password."
+    }

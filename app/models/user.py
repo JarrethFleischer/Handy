@@ -12,6 +12,7 @@ class User(Base):
     __tablename__ = "core_user"
     
     userID = Column("core_user_id", Integer, primary_key=True, index=True)
+    userName = Column("core_user_name", String(255), nullable=False)
     userUsername = Column("core_user_username", String(255), unique=True, nullable=False, index=True)
     userPassword = Column("core_user_password", String(255), nullable=False)
     userStatus = Column("core_user_status", Integer, nullable=False, default=1)

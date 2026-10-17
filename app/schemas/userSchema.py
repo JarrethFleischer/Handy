@@ -19,16 +19,19 @@ class UserBase(BaseModel):
     userUsername: EmailStr = Field(..., max_length=255, description="Email address for login")
 
 class UserCreate(UserBase):
+    userName: str = Field(None, max_length=255)
     userPassword: str = Field(..., min_length=6, max_length=255, description="Plain text password")
     userStatus: Optional[int] = 1
 
 class UserUpdate(BaseModel):
+    userName: Optional[str] = Field(None, max_length=255)
     userUsername: Optional[EmailStr] = Field(None, max_length=255)
     userPassword: Optional[str] = Field(None, min_length=6, max_length=255)
     userStatus: Optional[int] = Field(None, description="1 - Active, 2 - Disabled")
 
 class UserResponse(UserBase):
     userID: int
+    userName: str
     userStatus: int
     userDateCreated: datetime
     userDateUpdated: datetime
@@ -70,3 +73,12 @@ class TokenData(BaseModel):
 class LoginSchema(BaseModel):
     username: str
     password: str
+    
+# Email
+class SendOTPRequest(BaseModel):
+    userUsername: EmailStr
+
+class VerifyOTPAndResetPassword(BaseModel):
+    userUsername: EmailStr
+    otpCode: str
+    newPassword: str

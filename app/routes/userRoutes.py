@@ -13,8 +13,11 @@ from app.schemas.userSchema import (
     StreakUpdateResponse,
     Token,
     LoginSchema,
-    AddXPResponse
+    AddXPResponse,
+    SendOTPRequest, 
+    VerifyOTPAndResetPassword
 )
+
 from app.helpers.security import oauth2_scheme, decodeAccessToken
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -122,3 +125,12 @@ def logout(token: str = Depends(oauth2_scheme)):
 
 def get_current_logged_in_user(token_payload: dict = Depends(decodeAccessToken), db: Session = Depends(getDB)):
     return User.getCurrentUser(token_payload, db)
+
+# Reset Password
+@router.post("/forgot-password/send-otp")
+async def send_otp(payload: SendOTPRequest, db: Session = Depends(getDB)):
+    return await User.sendPasswordResetOTP(payload.userUsername, db)
+
+@router.post("/forgot-password/reset")
+def reset_password(payload: VerifyOTPAndResetPassword, db: Session = Depends(getDB)):
+    return User.resetPasswordWithOTP(payload, db)
