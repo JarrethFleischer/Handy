@@ -1,52 +1,134 @@
 import json
+import os
 import random
+from typing import List, Optional
 from sqlalchemy.orm import Session
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, Request, UploadFile
 from app.models.chapter import chapter 
 from app.schemas.chapterSchema import ChapterCreate, ChapterUpdate
 from app.helpers.format_helper import format_api_response
 
-def getAllChapters(db: Session, skip: int = 0, limit: int = 100):
-    return db.query(chapter).filter(chapter.chapterStatus == 1).offset(skip).limit(limit).all()
+# Video extraction for frontend
+UPLOAD_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "static", "videos")
+
+def saveUploadedVideo(file: UploadFile):
+    os.makedirs(UPLOAD_DIR, exist_ok=True)
+    fileLocation = os.path.join(UPLOAD_DIR, file.filename)
+    
+    with open(fileLocation, "wb") as buffer:
+        buffer.write(file.file.read())
+    
+    return file.filename
+    
+def formatVideoUrl(rawVideoPath: str, request: Request = None) -> str:
+    if not rawVideoPath:
+        return ""
+    
+    if rawVideoPath.startswith("http://") or rawVideoPath.startswith("https://"):
+        return rawVideoPath
+    
+    fileName = rawVideoPath if rawVideoPath.endswith(".mp4") else f"{rawVideoPath}.mp4"
+    
+    if request:
+        baseUrl = str(request.base_url).rstrip("/")
+        return f"{baseUrl}/static/videos/{fileName}"
+    
+    # Fallback
+    return f"/static/videos/{fileName}"
+
+def extractAndFormatStory(storyData: dict, request: Request = None) -> dict:
+    if not isinstance(storyData, dict):
+        return storyData
+    
+    lessons = storyData.get("chapterContent", [])
+    for lesson in lessons:
+        for q in lesson.get("lessonQuestions", []):
+            if "questionVideo" in q:
+                q["questionVideo"] = formatVideoUrl(q["questionVideo"], request)
+                
+    return storyData
+
+# --- Controller Endpoints ---
+
+def getAllChapters(db: Session, request: Request = None, skip: int = 0, limit: int = 100):
+    chapters = db.query(chapter).filter(chapter.chapterStatus == 1).offset(skip).limit(limit).all()
+    for chap in chapters:
+        if isinstance(chap.chapterStory, dict):
+            chap.chapterStory = extractAndFormatStory(chap.chapterStory, request)
+    return chapters
 
 
-def getChaptersByID(chapterID: int, db: Session):
+def getChaptersByID(chapterID: int, db: Session, request: Request = None):
     chapterByID = db.query(chapter).filter(chapter.chapterID == chapterID).first()
     if not chapterByID:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Chapter with ID {chapterID} not found",
         )
+    if isinstance(chapterByID.chapterStory, dict):
+        chapterByID.chapterStory = extractAndFormatStory(chapterByID.chapterStory, request)
     return chapterByID
 
 
-def createChapter(chapterData: ChapterCreate, db: Session):
+def createChapter(
+    chapterData: ChapterCreate, 
+    video_files: Optional[List[UploadFile]] = None, 
+    request: Request = None, 
+    db: Session = None
+):
+    # 1. Save uploaded video files to disk
+    if video_files:
+        for video in video_files:
+            if video.filename:
+                saveUploadedVideo(video)
+
+    # 2. Extract and format story payload
+    story_dict = chapterData.chapterStory.model_dump()
+
     newChapter = chapter(
         chapterLevel=chapterData.chapterLevel,
-        chapterStory=chapterData.chapterStory.model_dump(),  # Convert Pydantic object to JSON-serializable dict
+        chapterStory=story_dict,
         chapterStatus=chapterData.chapterStatus or 1
     )
     
     db.add(newChapter)
     db.commit()
     db.refresh(newChapter)
+    
+    # Format URLs for returned output
+    newChapter.chapterStory = extractAndFormatStory(newChapter.chapterStory, request)
     return newChapter
 
 
-def updateChapter(chapterID: int, chapterData: ChapterUpdate, db: Session):
-    chapterByID = getChaptersByID(chapterID, db)
-    updateData = chapterData.model_dump(exclude_unset=True)
+def updateChapter(
+    chapterID: int, 
+    chapterData: ChapterUpdate, 
+    video_files: Optional[List[UploadFile]] = None, 
+    request: Request = None, 
+    db: Session = None
+):
+    chapterByID = getChaptersByID(chapterID, db, request=None)
     
+    if video_files:
+        for video in video_files:
+            if video.filename:
+                saveUploadedVideo(video)
+
+    updateData = chapterData.model_dump(exclude_unset=True)
     for key, value in updateData.items():
         setattr(chapterByID, key, value)
     
     db.commit()
     db.refresh(chapterByID)
+    
+    if isinstance(chapterByID.chapterStory, dict):
+        chapterByID.chapterStory = extractAndFormatStory(chapterByID.chapterStory, request)
+        
     return chapterByID
 
 
 def deleteChapter(chapterID: int, db: Session):
-    chapterByID = getChaptersByID(chapterID, db)
+    chapterByID = getChaptersByID(chapterID, db, request=None)
     chapterByID.chapterStatus = 2
     
     db.commit()
@@ -56,79 +138,45 @@ def deleteChapter(chapterID: int, db: Session):
         f"Chapter {chapterID} disabled successfully", 
         chapterByID
     )
-    
-# ---------------------------------------------------------
-# Random Quiz Question Generator
-# ---------------------------------------------------------
 
-def extractQuestionsFromChapterStory(story_data: dict):
-    """
-    Traverses the chapterStory JSON and pulls all questions from each lesson.
-    """
-    questions = []
-    
-    if not isinstance(story_data, dict):
-        return questions
 
-    chapter_title = story_data.get("chapterTitle", "")
-    lessons = story_data.get("chapterContent", [])
-
-    for lesson in lessons:
-        lesson_no = lesson.get("lessonNo")
-        lesson_desc = lesson.get("lessonDesc")
-        for q in lesson.get("lessonQuestions", []):
-            questions.append({
-                "questionNo": q.get("questionNo"),
-                "questionTitle": q.get("questionTitle"),
-                "questionText": q.get("questionText"),
-                "questionVideo": q.get("questionVideo"),
-                "lessonNo": lesson_no,
-                "lessonDesc": lesson_desc,
-                "chapterTitle": chapter_title
-            })
-
-    return questions
-
-def getRandomQuizQuestion(db: Session, count: int = 6):
-    """
-    Retrieves all active chapters, aggregates questions across all lessons,
-    and returns a randomized set of questions (default: 6).
-    """
+def getRandomQuizQuestion(db: Session, request: Request = None, count: int = 6):
     activeChapters = db.query(chapter).filter(chapter.chapterStatus == 1).all()
-    
     if not activeChapters:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No active chapters found in database."
-        )
+        raise HTTPException(status_code=404, detail="No active chapters found.")
 
     allQuestions = []
 
     for chap in activeChapters:
         story = chap.chapterStory
-        
-        # Parse string if database returned JSON as string
         if isinstance(story, str):
             try:
                 story = json.loads(story)
             except json.JSONDecodeError:
                 continue
 
-        extracted = extractQuestionsFromChapterStory(story)
-        
-        # Attach chapter context metadata
-        for q in extracted:
-            q["chapterID"] = chap.chapterID
-            q["chapterLevel"] = chap.chapterLevel
-            allQuestions.append(q)
+        if isinstance(story, dict):
+            chapter_title = story.get("chapterTitle", "")
+            lessons = story.get("chapterContent", [])
+            for lesson in lessons:
+                lesson_no = lesson.get("lessonNo")
+                lesson_desc = lesson.get("lessonDesc")
+                for q in lesson.get("lessonQuestions", []):
+                    allQuestions.append({
+                        "questionNo": q.get("questionNo"),
+                        "questionTitle": q.get("questionTitle"),
+                        "questionText": q.get("questionText"),
+                        "questionVideo": formatVideoUrl(q.get("questionVideo", ""), request),
+                        "lessonNo": lesson_no,
+                        "lessonDesc": lesson_desc,
+                        "chapterTitle": chapter_title,
+                        "chapterID": chap.chapterID,
+                        "chapterLevel": chap.chapterLevel
+                    })
 
     if not allQuestions:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No questions found inside chapter story records."
-        )
+        raise HTTPException(status_code=404, detail="No questions found.")
 
-    # Pick up to `count` unique random questions (or all if total < count)
     sample_size = min(count, len(allQuestions))
     randomQuestions = random.sample(allQuestions, sample_size)
 
