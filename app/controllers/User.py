@@ -1,3 +1,4 @@
+from sqlalchemy import desc
 from sqlalchemy.orm import Session
 import random
 from fastapi import HTTPException, status
@@ -341,4 +342,81 @@ def resetPasswordWithOTP(payload: VerifyOTPAndResetPassword, db: Session):
     return {
         "status": "success",
         "message": "Password successfully reset. You can now log in with your new password."
+    }
+    
+# Additional Features (Leaderboard, Quiz Title Randomizer, Restore Streak using EXP)
+def leaderboardList(db: Session, skip: int = 0, limit: int = 100):
+    results = (
+        db.query(User, UserDetails)
+        .join(UserDetails, User.userID == UserDetails.userDetailsUserID)
+        .filter(User.userStatus == 1)
+        .order_by(
+            desc(UserDetails.userDetailsLevel),
+            desc(UserDetails.userDetailsXP)
+        )
+        .offset(skip)
+        .limit(limit)
+        .all()
+    )
+    
+    leaderboard = []
+    for rank, (user,details) in enumerate(results, start = skip + 1):
+        leaderboard.append({
+            "userRank": rank,
+            "userID": user.userID,
+            "userName": getattr(user, "userName", user.userName),
+            "userLevel": details.userDetailsLevel,
+            "userXP": details.userDetailsXP,
+            "userStreakCount": details.userDetailsStreakCount
+        })
+    
+    return leaderboard
+
+def restoreStreakWithXP(userID: int, xpCost: int, db: Session):
+    details = db.query(UserDetails).filter(UserDetails.userDetailsUserID == userID).first()
+    if not details:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User details for user ID {userID} not found."
+        )
+        
+    currentXP = details.userDetailsXP or 0
+    
+    # Check if enough XP
+    if currentXP < xpCost:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Insufficient XP. You need {xpCost} XP to restore your streak, but only have {current_xp} XP."
+        )
+    
+    # Deduct XP and update dynamically
+    details.userDetailsXP = currentXP - xpCost
+    details.userDetailsLevel = calculateLevelFromTotalXP(details.userDetailsXP)
+    
+    # Restore streak count to 1 and update activity date
+    details.userDetailsStreakCount = 1
+    details.userDetailsLastActivity = getMyyTime()
+    
+    # Sync bridge progress with updated level/XP
+    currentChapter = details.userDetailsLevel
+    progressWithinChapter = str(details.userDetailsXP % 500)
+    
+    existingBridge = db.query(bridge).filter(
+        bridge.bridgeUserID == userID,
+        bridge.bridgeChapterID == currentChapter
+    ).first()
+    
+    if existingBridge:
+        existingBridge.bridgeProgress = progressWithinChapter
+        existingBridge.bridgeDateUpdated = getMyyTime()
+        
+    db.commit()
+    db.refresh()
+    
+    return {
+        "status": "success",
+        "message": f"Streak restored successfully! Deducted {xpCost} XP.",
+        "remainingXP": details.userDetailsXP,
+        "currentLevel": details.userDetailsLevel,
+        "streakCount": details.userDetailsStreakCount
     }

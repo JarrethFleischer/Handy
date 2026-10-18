@@ -1,24 +1,45 @@
 from datetime import datetime
-from typing import Any, Dict, List, Optional, Union
+from typing import List, Optional
 from pydantic import BaseModel, Field
 
+
+class QuestionSchema(BaseModel):
+    questionNo: int
+    questionTitle: str
+    questionText: str
+    questionVideo: Optional[str] = None
+
+
+class LessonSchema(BaseModel):
+    lessonNo: int
+    lessonDesc: str
+    lessonQuestions: List[QuestionSchema]
+
+
+class ChapterStorySchema(BaseModel):
+    chapterTitle: str
+    chapterContent: List[LessonSchema]
+
+
 class ChapterBase(BaseModel):
-    chapterTitle: str = Field("Hello")
     chapterLevel: int
-    chapterStory: Union[Dict[str, Any], List[Any]] = Field(
-        ..., description="JSON structure containing chapter story payload"
-    )
+    chapterStory: ChapterStorySchema
+
 
 class ChapterCreate(ChapterBase):
     chapterStatus: Optional[int] = 1
 
+
 class ChapterUpdate(BaseModel):
     chapterLevel: Optional[int] = None
-    chapterStory: Optional[Union[Dict[str, Any], List[Any]]] = None
+    chapterStory: Optional[ChapterStorySchema] = None
     chapterStatus: Optional[int] = None
 
-class ChapterResponse(ChapterBase):
+
+class ChapterResponse(BaseModel):
     chapterID: int
+    chapterLevel: int
+    chapterStory: ChapterStorySchema
     chapterStatus: int
     chapterDateCreated: datetime
 

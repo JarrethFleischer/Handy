@@ -1,5 +1,5 @@
 from typing import List
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, status, Query
 from sqlalchemy.orm import Session
 from app.config.database import getDB
 from app.controllers import User
@@ -134,3 +134,12 @@ async def send_otp(payload: SendOTPRequest, db: Session = Depends(getDB)):
 @router.post("/forgot-password/reset")
 def reset_password(payload: VerifyOTPAndResetPassword, db: Session = Depends(getDB)):
     return User.resetPasswordWithOTP(payload, db)
+
+# Additional Features
+@router.get("/leaderboard")
+def get_leaderboard(skip: int = 0, limit: int = 100, db: Session = Depends(getDB)):
+    return User.leaderboardList(db, skip=skip, limit=limit)
+
+@router.post("/streak/restore/{userID}")
+def restore_streak(userID: int, xpCost: int = Query(200, ge=50), db: Session = Depends(getDB)):
+    return User.restoreStreakWithXP(userID=userID, xpCost=xpCost, db=db)
