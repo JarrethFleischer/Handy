@@ -152,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     controller: _password,
                                     obscureText: _obscurePassword,
                                     decoration: InputDecoration(
-                                      hintText: '********',
+                                      hintText: 'Password',
                                       hintStyle: TextStyle(
                                         color: Colors.black38,
                                         fontSize: 14,

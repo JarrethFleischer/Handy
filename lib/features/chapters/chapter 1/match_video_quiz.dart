@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/chapters/chapter 1/learn_sign_question.dart';
+import 'package:handy/features/widget/sound.dart';
 import 'package:handy/theme/app_colors.dart';
 
 class VideoMatchPair {
@@ -95,6 +96,11 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
     }
 
     if (!_hasSubmitted) {
+      if (_allCorrect) {
+        playCorrectSound();
+      } else {
+        playIncorrectSound();
+      }
       setState(() {
         _hasSubmitted = true;
       });

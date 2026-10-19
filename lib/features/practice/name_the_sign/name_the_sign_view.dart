@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:handy/features/chapters/chapter 1/learn_sign_question.dart';
+import 'package:handy/features/widget/sound.dart';
 import 'package:handy/theme/app_colors.dart';
 
 class NameTheSignView extends StatefulWidget {
@@ -80,10 +81,12 @@ class _NameTheSignViewState extends State<NameTheSignView> {
     );
 
     if (!matched) {
+      playIncorrectSound();
       setState(() => _isCorrect = false);
       return;
     }
 
+    playCorrectSound();
     setState(() {
       _isCorrect = true;
       _correctCount++;

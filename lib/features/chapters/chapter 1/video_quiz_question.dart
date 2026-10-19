@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/chapters/chapter 1/learn_sign_question.dart';
+import 'package:handy/features/widget/sound.dart';
 import 'package:handy/theme/app_colors.dart';
 
 class VideoQuizQuestion extends StatefulWidget {
@@ -32,6 +33,11 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
     }
 
     if (!_hasSubmitted) {
+      if (_isCorrect) {
+        playCorrectSound();
+      } else {
+        playIncorrectSound();
+      }
       setState(() {
         _hasSubmitted = true;
       });

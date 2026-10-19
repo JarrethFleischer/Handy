@@ -4,13 +4,15 @@ import 'package:video_player/video_player.dart';
 
 class LearnSignQuestion extends StatelessWidget {
   const LearnSignQuestion({
-    required this.videoAsset,
+    this.videoAsset,
+    this.videoUrl,
     required this.sign,
     required this.onContinue,
     super.key,
   });
 
-  final String videoAsset;
+  final String? videoAsset;
+  final String? videoUrl;
   final String sign;
   final VoidCallback onContinue;
 
@@ -34,8 +36,9 @@ class LearnSignQuestion extends StatelessWidget {
           padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 20),
           child: ClipRRect(
             child: LessonVideo(
-              key: ValueKey(videoAsset),
+              key: ValueKey(videoUrl ?? videoAsset),
               assetPath: videoAsset,
+              videoUrl: videoUrl,
             ),
           ),
         ),
@@ -102,9 +105,15 @@ class LessonButton extends StatelessWidget {
 }
 
 class LessonVideo extends StatefulWidget {
-  const LessonVideo({required this.assetPath, this.height = 220, super.key});
+  const LessonVideo({
+    this.assetPath,
+    this.videoUrl,
+    this.height = 220,
+    super.key,
+  });
 
-  final String assetPath;
+  final String? assetPath;
+  final String? videoUrl;
   final double height;
 
   @override
@@ -118,7 +127,10 @@ class _LessonVideoState extends State<LessonVideo> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.asset(widget.assetPath);
+    final url = widget.videoUrl;
+    _controller = url != null
+        ? VideoPlayerController.networkUrl(Uri.parse(url))
+        : VideoPlayerController.asset(widget.assetPath!);
     _initializeVideo();
   }
 

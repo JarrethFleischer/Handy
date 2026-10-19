@@ -128,6 +128,7 @@ class PracticeView extends StatelessWidget {
                   _PracticeCard(
                     icon: Icons.videocam_rounded,
                     title: 'Quiz',
+                    description: 'Using Ai camera to test your knowledge',
                     onTap: () {
                       Navigator.push(
                         context,
@@ -139,6 +140,7 @@ class PracticeView extends StatelessWidget {
                   _PracticeCard(
                     icon: Icons.quiz,
                     title: 'Name the sign',
+                    description: 'Test your knowledge of hand signs',
                     onTap: () {
                       Navigator.push(
                         context,
@@ -163,12 +165,13 @@ class _PracticeCard extends StatelessWidget {
     required this.icon,
     required this.title,
     required this.onTap,
+    required this.description,
   });
 
   final IconData icon;
   final String title;
   final VoidCallback onTap;
-
+  final String description;
   @override
   Widget build(BuildContext context) {
     return Material(
@@ -208,6 +211,14 @@ class _PracticeCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        color: AppColors.grayDark,
+                        fontSize: 10,
+                      ),
+                    ),
                   ],
                 ),
               ),

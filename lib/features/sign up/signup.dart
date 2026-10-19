@@ -253,80 +253,6 @@ class _SignupScreenState extends State<SignupScreen> {
                                             height: 1,
                                             color: Colors.grey[200],
                                           ),
-
-                                          TextFormField(
-                                            controller: _phone,
-                                            keyboardType: TextInputType.phone,
-                                            decoration: InputDecoration(
-                                              hintText: '123456789',
-                                              hintStyle: TextStyle(
-                                                color: Colors.black38,
-                                                fontSize: 14,
-                                              ),
-                                              prefixIcon: Padding(
-                                                padding: const EdgeInsets.only(
-                                                  left: 12,
-                                                  right: 8,
-                                                ),
-                                                child: GestureDetector(
-                                                  onTap: () {
-                                                    showCountryPicker(
-                                                      context: context,
-                                                      showPhoneCode: true,
-                                                      onSelect: (Country country) {
-                                                        setState(() {
-                                                          _selectedCountryCode =
-                                                              country.phoneCode;
-                                                          _selectedFlagEmoji =
-                                                              country
-                                                                  .flagEmoji; // Update the flag emoji when a country is selected
-                                                        });
-                                                      },
-                                                    );
-                                                  },
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Text(
-                                                        _selectedFlagEmoji,
-                                                        style: const TextStyle(
-                                                          fontSize: 20,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 4),
-                                                      Text(
-                                                        '+$_selectedCountryCode',
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 13,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 4),
-                                                      Icon(
-                                                        Icons
-                                                            .keyboard_arrow_down,
-                                                        color: Colors.grey[600],
-                                                        size: 18,
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      Container(
-                                                        width: 1,
-                                                        height: 24,
-                                                        color: Colors.grey[300],
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                              border: InputBorder.none,
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 16,
-                                                  ),
-                                            ),
-                                          ),
                                           Divider(
                                             height: 1,
                                             color: Colors.grey[200],
@@ -336,7 +262,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                             controller: _password,
                                             obscureText: _obscurePassword,
                                             decoration: InputDecoration(
-                                              hintText: '********',
+                                              hintText: 'Password',
                                               hintStyle: TextStyle(
                                                 color: Colors.black38,
                                                 fontSize: 14,

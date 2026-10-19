@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:handy/features/chapters/chapter 1/lesson_1_view.dart';
-import 'package:handy/features/chapters/chapter 1/lesson_2_view.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:handy/features/chapters/chapter 1/chapter1_view.dart';
+import 'package:handy/features/chapters/chapter_controller.dart';
 import 'package:handy/theme/app_colors.dart';
 import 'package:handy/theme/shimmer_text.dart';
 
@@ -48,9 +48,13 @@ class HomepageView extends StatefulWidget {
 }
 
 class _HomepageViewState extends State<HomepageView> {
-  bool _isChapterOneExpanded = false;
+  final _chapterController = ChapterController();
+  final Set<int> _expandedChapterIds = {};
+
+  List<Chapter> _chapters = [];
   bool _isLoading = true;
   bool _didStartLoading = false;
+  String? _error;
 
   @override
   void didChangeDependencies() {
@@ -63,13 +67,31 @@ class _HomepageViewState extends State<HomepageView> {
   }
 
   Future<void> _loadHomepage() async {
-    await Future.wait([
-      precacheImage(const AssetImage('assets/images/background.png'), context),
-      precacheImage(const AssetImage('assets/images/coin.png'), context),
-      precacheImage(const AssetImage('assets/images/streak.png'), context),
-    ]);
-    if (mounted) {
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      final chapters = await _chapterController.fetchChapters();
+      if (!mounted) return;
+      await Future.wait([
+        precacheImage(
+          const AssetImage('assets/images/background.png'),
+          context,
+        ),
+        precacheImage(const AssetImage('assets/images/coin.png'), context),
+        precacheImage(const AssetImage('assets/images/streak.png'), context),
+      ]);
+      if (!mounted) return;
       setState(() {
+        _chapters = chapters;
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _error = 'Could not load chapters';
         _isLoading = false;
       });
     }
@@ -179,191 +201,95 @@ class _HomepageViewState extends State<HomepageView> {
                       ],
                     ),
                   ),
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
-                    child: _ChapterCard(
-                      label: 'CHAPTER 1',
-                      title: 'Hello and Welcome',
-                      progress: '1 of 4 lessons completed',
-                      progressValue: 0.25,
-                      icon: Icons.play_circle,
-                      iconColor: AppColors.blueLight,
-                      isLoading: _isLoading,
-                      isExpanded: _isChapterOneExpanded,
-                      onTap: () {
-                        setState(() {
-                          _isChapterOneExpanded = !_isChapterOneExpanded;
-                        });
-                      },
-                    ),
-                  ),
-                  _ExpandableSection(
-                    expanded: _isChapterOneExpanded,
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 10,
-                          height: 20,
-                          decoration: const BoxDecoration(
-                            color: AppColors.grayLight,
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 24),
+                      child: Column(
+                        children: [
+                          Text(_error!, style: HomepageView._body),
+                          TextButton(
+                            onPressed: _loadHomepage,
+                            child: const Text('Try again'),
                           ),
-                        ),
-                        _LessonCard(
-                          title: 'Lesson 1',
-                          subtitle: 'Discover new Vocabulary',
-                          icon: Icons.check_circle,
-                          iconColor: AppColors.blueLight,
-                          isLoading: _isLoading,
-                          progressValue: 1,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Lesson1View(),
-                              ),
-                            );
-                          },
-                        ),
-                        const _LessonSpacer(),
-                        _LessonCard(
-                          title: 'Lesson 2',
-                          subtitle: 'Discover new Vocabulary',
-                          icon: Icons.play_circle,
-                          iconColor: Color(0xFF386BF6),
-                          isLoading: _isLoading,
-                          progressValue: 0.25,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Lesson2View(),
-                              ),
-                            );
-                          },
-                        ),
-                        const _LessonSpacer(),
-                        _LessonCard(
-                          title: 'Lesson 3',
-                          subtitle: 'Practice a dialogue',
-                          icon: Icons.lock,
-                          iconColor: AppColors.blueLight,
-                          isLoading: _isLoading,
-                          progressValue: 0,
-                        ),
-                        const _LessonSpacer(),
-                        _LessonCard(
-                          title: 'Lesson 4',
-                          subtitle: 'Practice with your camera',
-                          icon: Icons.lock,
-                          iconColor: AppColors.blueLight,
-                          isLoading: _isLoading,
-                          progressValue: 0,
-                        ),
-                      ],
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
-                    child: Opacity(
-                      opacity: 0.55,
-                      child: _ChapterCard(
-                        label: 'CHAPTER 2',
-                        title: 'Basics of the Language',
-                        progress: '0 of 4 lessons completed',
-                        progressValue: 0.0,
-                        icon: Icons.lock,
-                        iconColor: AppColors.blueLight,
-                        isLoading: _isLoading,
+                        ],
                       ),
-                    ),
-                  ),
-                  _ExpandableSection(
-                    expanded: false,
-                    child: Column(
-                      children: [
-                        Container(
-                          width: 10,
-                          height: 20,
-                          decoration: const BoxDecoration(
-                            color: AppColors.grayLight,
-                          ),
-                        ),
-                        _LessonCard(
-                          title: 'Lesson 1',
-                          subtitle: 'Discover new Vocabulary',
-                          icon: Icons.check_circle,
-                          iconColor: Color(0xFF386BF6),
-                          progressValue: 1,
-                          isLoading: _isLoading,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Lesson1View(),
-                              ),
-                            );
-                          },
-                        ),
-                        const _LessonSpacer(),
-                        _LessonCard(
-                          title: 'Lesson 2',
-                          subtitle: 'Discover new Vocabulary',
-                          icon: Icons.play_circle,
-                          iconColor: AppColors.blueLight,
-                          progressValue: 0.25,
-                          isLoading: _isLoading,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Lesson1View(),
-                              ),
-                            );
-                          },
-                        ),
-                        const _LessonSpacer(),
-                        _LessonCard(
-                          title: 'Lesson 3',
-                          subtitle: 'Practice a dialogue',
-                          icon: Icons.play_circle,
-                          iconColor: AppColors.blueLight,
-                          progressValue: 0,
-                          isLoading: _isLoading,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Lesson1View(),
-                              ),
-                            );
-                          },
-                        ),
-                        const _LessonSpacer(),
-                        _LessonCard(
-                          title: 'Lesson 4',
-                          subtitle: 'Practice with your camera',
-                          icon: Icons.play_circle,
-                          iconColor: AppColors.blueLight,
-                          progressValue: 0,
-                          isLoading: _isLoading,
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => const Lesson1View(),
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
+                    )
+                  else
+                    ..._chapters.map(_buildChapter),
                 ],
               ),
             ),
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildChapter(Chapter chapter) {
+    final lessons = chapter.chapterStory.chapterContent;
+    final expanded = _expandedChapterIds.contains(chapter.chapterID);
+    final unlocked = chapter.isUnlocked;
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
+          child: Opacity(
+            opacity: unlocked ? 1 : 0.55,
+            child: _ChapterCard(
+              label: chapter.chapterStory.chapterTitle,
+              title: chapter.chapterStory.chapterTitle,
+              progress: '${lessons.length} lessons',
+              progressValue: 0,
+              icon: unlocked ? Icons.play_circle : Icons.lock,
+              iconColor: AppColors.blueLight,
+              isLoading: _isLoading,
+              isExpanded: unlocked ? expanded : null,
+              onTap: unlocked
+                  ? () {
+                      setState(() {
+                        if (expanded) {
+                          _expandedChapterIds.remove(chapter.chapterID);
+                        } else {
+                          _expandedChapterIds.add(chapter.chapterID);
+                        }
+                      });
+                    }
+                  : null,
+            ),
+          ),
+        ),
+        _ExpandableSection(
+          expanded: unlocked && expanded,
+          child: Column(
+            children: [
+              Container(
+                width: 10,
+                height: 20,
+                decoration: const BoxDecoration(color: AppColors.grayLight),
+              ),
+              for (var i = 0; i < lessons.length; i++) ...[
+                if (i > 0) const _LessonSpacer(),
+                _LessonCard(
+                  title: lessons[i].lessonDesc,
+                  subtitle: 'Lesson ${lessons[i].lessonNo}',
+                  icon: Icons.play_circle,
+                  iconColor: AppColors.blueLight,
+                  isLoading: _isLoading,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => Chapter1View(lesson: lessons[i]),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

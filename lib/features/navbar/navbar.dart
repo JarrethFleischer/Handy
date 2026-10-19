@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/homepage/homepage_view.dart';
 import 'package:handy/features/practice/practice_view.dart';
+import 'package:handy/features/leaderboard/leaderboard_view.dart';
 import 'package:handy/features/profile/profile_view.dart';
+import 'package:handy/theme/app_colors.dart';
 
 class AppNavigationShell extends StatefulWidget {
   const AppNavigationShell({super.key});
@@ -18,7 +20,12 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: const [HomepageView(), PracticeView(), ProfileView()],
+        children: const [
+          HomepageView(),
+          PracticeView(),
+          LeaderboardView(),
+          ProfileView(),
+        ],
       ),
       bottomNavigationBar: AppBottomNavbar(
         currentIndex: _currentIndex,
@@ -59,7 +66,7 @@ class AppBottomNavbar extends StatelessWidget {
       //     ),
       //   ],
       // ),
-      child: Icon(icon, color: const Color(0xFF386BF6), size: 26),
+      child: Icon(icon, color: AppColors.blueDark, size: 26),
     );
   }
 
@@ -67,7 +74,7 @@ class AppBottomNavbar extends StatelessWidget {
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final tabWidth = constraints.maxWidth / 3;
+        final tabWidth = constraints.maxWidth / 4;
         final indicatorWidth = tabWidth * 0.40;
 
         return Stack(
@@ -78,7 +85,7 @@ class AppBottomNavbar extends StatelessWidget {
               iconSize: 26,
               type: BottomNavigationBarType.fixed,
               backgroundColor: Colors.white,
-              selectedItemColor: const Color(0xFF386BF6),
+              selectedItemColor: AppColors.blueDark,
               unselectedItemColor: const Color(0xFF57636C),
               items: [
                 BottomNavigationBarItem(
@@ -90,6 +97,11 @@ class AppBottomNavbar extends StatelessWidget {
                   icon: const Icon(Icons.fitness_center_outlined),
                   activeIcon: _selectedIcon(Icons.fitness_center),
                   label: 'Practice',
+                ),
+                BottomNavigationBarItem(
+                  icon: const Icon(Icons.leaderboard_outlined),
+                  activeIcon: _selectedIcon(Icons.leaderboard),
+                  label: 'Leaderboard',
                 ),
                 BottomNavigationBarItem(
                   icon: const Icon(Icons.person_outline),
@@ -108,7 +120,7 @@ class AppBottomNavbar extends StatelessWidget {
               height: 3,
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  color: const Color(0xFF386BF6),
+                  color: AppColors.blueDark,
                   borderRadius: BorderRadius.circular(20),
                   boxShadow: const [
                     BoxShadow(

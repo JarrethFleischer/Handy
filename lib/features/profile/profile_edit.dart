@@ -13,7 +13,7 @@ class _EditProfileViewState extends State<EditProfileView> {
   final _username = TextEditingController(text: 'Danish Syazwi');
   final _phone = TextEditingController(text: '(+60) 19 848 7025');
   final _email = TextEditingController(text: 'danish25122004@gmail.com');
-  final _bio = TextEditingController(text: 'Kongkek For LIFE!!');
+  final _bio = TextEditingController(text: 'Kongkek For Jarreth LIFE!!');
 
   @override
   void dispose() {
@@ -38,7 +38,7 @@ class _EditProfileViewState extends State<EditProfileView> {
           Text(
             label,
             style: const TextStyle(
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w500,
               color: Color(0xFF14304A),
               fontSize: 14,
             ),
@@ -48,7 +48,6 @@ class _EditProfileViewState extends State<EditProfileView> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black, width: 1.5),
             ),
             child: TextFormField(
               controller: controller,
@@ -149,7 +148,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.black, width: 2),
+                            border: Border.all(color: Colors.black, width: 1),
                           ),
                           padding: const EdgeInsets.all(4.0),
                           child: ClipOval(
@@ -167,7 +166,7 @@ class _EditProfileViewState extends State<EditProfileView> {
                               0xFFFFD465,
                             ), // Yellow from your theme
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.black, width: 1.5),
+                            border: Border.all(color: Colors.black, width: 1),
                           ),
                           child: const Icon(
                             Icons.camera_alt,
@@ -215,10 +214,6 @@ class _EditProfileViewState extends State<EditProfileView> {
                           elevation: 0,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
-                            side: const BorderSide(
-                              color: Colors.black,
-                              width: 1.5,
-                            ),
                           ),
                         ),
                         onPressed: () {
