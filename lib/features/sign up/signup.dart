@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:country_picker/country_picker.dart';
-import 'package:handy/features/login/login.dart';
+import 'package:handy/services/auth_service.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -14,7 +14,35 @@ class _SignupScreenState extends State<SignupScreen> {
   String _selectedCountryCode = '+1'; // Default country code
   String _selectedFlagEmoji = '🇺🇸'; // Default country flag
 
-  //final _formKey = GlobalKey<FormState>();
+  final _formKey = GlobalKey<FormState>();
+  bool _loading = false;
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    try {
+      await AuthService.signup(
+        name: _name.text.trim(),
+        email: _email.text.trim(),
+        password: _password.text,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account created! Please log in.'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      Navigator.pop(context); // back to LoginScreen
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   final _name = TextEditingController();
   final _email = TextEditingController();
@@ -164,11 +192,17 @@ class _SignupScreenState extends State<SignupScreen> {
                                         color: Colors.white,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: Column(
+                                      child: Form(
+                                        key: _formKey,
+                                        child: Column(
                                         children: [
                                           // 1. NAME FIELD
                                           TextFormField(
                                             controller: _name,
+                                            validator: (v) =>
+                                                (v == null || v.trim().isEmpty)
+                                                ? 'Username is required'
+                                                : null,
                                             textCapitalization:
                                                 TextCapitalization.words,
                                             decoration: const InputDecoration(
@@ -196,6 +230,18 @@ class _SignupScreenState extends State<SignupScreen> {
 
                                           TextFormField(
                                             controller: _email,
+                                            validator: (v) {
+                                              if (v == null ||
+                                                  v.trim().isEmpty) {
+                                                return 'Email is required';
+                                              }
+                                              if (!emailRegex.hasMatch(
+                                                v.trim(),
+                                              )) {
+                                                return 'Enter a valid email';
+                                              }
+                                              return null;
+                                            },
                                             keyboardType:
                                                 TextInputType.emailAddress,
                                             decoration: const InputDecoration(
@@ -261,6 +307,10 @@ class _SignupScreenState extends State<SignupScreen> {
                                           TextFormField(
                                             controller: _password,
                                             obscureText: _obscurePassword,
+                                            validator: (v) =>
+                                                (v == null || v.length < 6)
+                                                ? 'Password must be at least 6 characters'
+                                                : null,
                                             decoration: InputDecoration(
                                               hintText: 'Password',
                                               hintStyle: TextStyle(
@@ -295,6 +345,7 @@ class _SignupScreenState extends State<SignupScreen> {
                                           ),
                                         ],
                                       ),
+                                      ),
                                     ),
                                     const SizedBox(height: 24),
 
@@ -310,17 +361,18 @@ class _SignupScreenState extends State<SignupScreen> {
                                             ),
                                           ),
                                         ),
-                                        //onPressed: _submit,
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const LoginScreen(),
-                                            ),
-                                          );
-                                        },
-                                        child: const Row(
+                                        onPressed: _loading ? null : _submit,
+                                        child: _loading
+                                            ? const SizedBox(
+                                                height: 22,
+                                                width: 22,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      color: Colors.white,
+                                                      strokeWidth: 2,
+                                                    ),
+                                              )
+                                            : const Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.center,
                                           children: [
