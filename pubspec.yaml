@@ -18,8 +18,6 @@ dependencies:
   shimmer: ^3.0.0
   flutter_svg: ^2.3.0
   country_picker: ^2.0.28
-  http: ^1.2.0
-  shared_preferences: ^2.3.2
 
 dev_dependencies:
   flutter_test:
