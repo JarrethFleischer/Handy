@@ -2,8 +2,10 @@ from fastapi import FastAPI
 from app.routes import chapterRoutes, userRoutes, feedbackRoutes
 from fastapi.staticfiles import StaticFiles
 import os
+from uvicorn.middleware.proxy_headers import ProxyHeadersMiddleware
 
 app = FastAPI(title="Story Application API")
+app.add_middleware(ProxyHeadersMiddleware, trusted_hosts=["*"])
 
 # Main Routes
 app.include_router(chapterRoutes.router)

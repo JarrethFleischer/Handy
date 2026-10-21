@@ -1,6 +1,7 @@
 import json
 import os
 import random
+from sqlalchemy.orm.attributes import flag_modified
 from typing import List, Optional
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, Request, UploadFile
@@ -19,34 +20,66 @@ def saveUploadedVideo(file: UploadFile):
         buffer.write(file.file.read())
     
     return file.filename
-    
+
 def formatVideoUrl(rawVideoPath: str, request: Request = None) -> str:
     if not rawVideoPath:
         return ""
-    
-    if rawVideoPath.startswith("http://") or rawVideoPath.startswith("https://"):
+
+    if rawVideoPath.startswith("http://") or rawVideoPath.startswith(
+        "https://"
+    ):
         return rawVideoPath
-    
-    fileName = rawVideoPath if rawVideoPath.endswith(".mp4") else f"{rawVideoPath}.mp4"
-    
+
+    fileName = (
+        rawVideoPath if rawVideoPath.endswith(".mp4") else f"{rawVideoPath}.mp4"
+    )
+
+    env_base_url = os.getenv("BASE_URL")
+    if env_base_url:
+        return f"{env_base_url.rstrip('/')}/static/videos/{fileName}"
+
     if request:
-        baseUrl = str(request.base_url).rstrip("/")
-        return f"{baseUrl}/static/videos/{fileName}"
-    
-    # Fallback
+        base_url = str(request.base_url).rstrip("/")
+        return f"{base_url}/static/videos/{fileName}"
+
     return f"/static/videos/{fileName}"
 
-def extractAndFormatStory(storyData: dict, request: Request = None) -> dict:
-    if not isinstance(storyData, dict):
-        return storyData
+# def extractAndFormatStory(storyData: dict, request: Request = None) -> dict:
+#     if not isinstance(storyData, dict):
+#         return storyData
     
-    lessons = storyData.get("chapterContent", [])
-    for lesson in lessons:
-        for q in lesson.get("lessonQuestions", []):
-            if "questionVideo" in q:
-                q["questionVideo"] = formatVideoUrl(q["questionVideo"], request)
+#     lessons = storyData.get("chapterContent", [])
+#     for lesson in lessons:
+#         for q in lesson.get("lessonQuestions", []):
+#             if "questionVideo" in q:
+#                 q["questionVideo"] = formatVideoUrl(q["questionVideo"], request)
                 
-    return storyData
+#     return storyData
+
+def extractAndFormatStory(story_dict: dict, request: Request = None) -> dict:
+    if not isinstance(story_dict, dict):
+        return story_dict
+
+    # Determine base host URL
+    env_base_url = os.getenv("BASE_URL")
+    if env_base_url:
+        base_url = env_base_url.rstrip("/")
+    elif request:
+        base_url = str(request.base_url).rstrip("/")
+    else:
+        base_url = "http://103.71.176.196"
+
+    # Walk through lessons and questions
+    content = story_dict.get("chapterContent", [])
+    for lesson in content:
+        questions = lesson.get("lessonQuestions", [])
+        for q in questions:
+            video_path = q.get("questionVideo")
+            if video_path and not video_path.startswith(("http://", "https://")):
+                file_name = video_path if video_path.endswith(".mp4") else f"{video_path}.mp4"
+                q["questionVideo"] = f"{base_url}/static/videos/{file_name}"
+
+    return story_dict
 
 # --- Controller Endpoints ---
 
@@ -71,10 +104,10 @@ def getChaptersByID(chapterID: int, db: Session, request: Request = None):
 
 
 def createChapter(
-    chapterData: ChapterCreate, 
-    video_files: Optional[List[UploadFile]] = None, 
-    request: Request = None, 
-    db: Session = None
+    chapterData: ChapterCreate,
+    video_files: Optional[List[UploadFile]] = None,
+    request: Request = None,
+    db: Session = None,
 ):
     # 1. Save uploaded video files to disk
     if video_files:
@@ -82,48 +115,95 @@ def createChapter(
             if video.filename:
                 saveUploadedVideo(video)
 
-    # 2. Extract and format story payload
+    # 2. Extract story payload as a full nested dict (preserves optional fields like questionQuiz)
     story_dict = chapterData.chapterStory.model_dump()
 
-    newChapter = chapter(
+    newChapter = Chapter(
         chapterLevel=chapterData.chapterLevel,
         chapterStory=story_dict,
-        chapterStatus=chapterData.chapterStatus or 1
+        chapterStatus=(
+            chapterData.chapterStatus
+            if chapterData.chapterStatus is not None
+            else 1
+        ),
     )
-    
+
     db.add(newChapter)
     db.commit()
     db.refresh(newChapter)
-    
-    # Format URLs for returned output
-    newChapter.chapterStory = extractAndFormatStory(newChapter.chapterStory, request)
+
+    # 3. Format URLs for returned output (pass a copy to avoid dirtying session)
+    if isinstance(newChapter.chapterStory, dict):
+        newChapter.chapterStory = extractAndFormatStory(
+            dict(newChapter.chapterStory), request
+        )
+
     return newChapter
 
+# def updateChapter(
+#     chapterID: int, 
+#     chapterData: ChapterUpdate, 
+#     video_files: Optional[List[UploadFile]] = None, 
+#     request: Request = None, 
+#     db: Session = None
+# ):
+#     chapterByID = getChaptersByID(chapterID, db, request=None)
+    
+#     if video_files:
+#         for video in video_files:
+#             if video.filename:
+#                 saveUploadedVideo(video)
+
+#     updateData = chapterData.model_dump(exclude_unset=True)
+#     for key, value in updateData.items():
+#         setattr(chapterByID, key, value)
+    
+#     db.commit()
+#     db.refresh(chapterByID)
+    
+#     if isinstance(chapterByID.chapterStory, dict):
+#         chapterByID.chapterStory = extractAndFormatStory(chapterByID.chapterStory, request)
+        
+#     return chapterByID
 
 def updateChapter(
-    chapterID: int, 
-    chapterData: ChapterUpdate, 
-    video_files: Optional[List[UploadFile]] = None, 
-    request: Request = None, 
-    db: Session = None
+    chapterID: int,
+    chapterData: ChapterUpdate,
+    video_files: Optional[List[UploadFile]] = None,
+    request: Request = None,
+    db: Session = None,
 ):
     chapterByID = getChaptersByID(chapterID, db, request=None)
-    
+    if not chapterByID:
+        return None
+
+    # 1. Save uploaded video files to disk
     if video_files:
         for video in video_files:
             if video.filename:
                 saveUploadedVideo(video)
 
+    # 2. Extract input values (dumps nested models into raw Python dicts)
     updateData = chapterData.model_dump(exclude_unset=True)
+
+    # 3. Apply updates
     for key, value in updateData.items():
-        setattr(chapterByID, key, value)
-    
+        if key == "chapterStory" and value is not None:
+            chapterByID.chapterStory = value
+            flag_modified(chapterByID, "chapterStory")
+        else:
+            setattr(chapterByID, key, value)
+
+    # 4. Commit changes to DB
     db.commit()
     db.refresh(chapterByID)
-    
+
+    # 5. Format URLs for returned output
     if isinstance(chapterByID.chapterStory, dict):
-        chapterByID.chapterStory = extractAndFormatStory(chapterByID.chapterStory, request)
-        
+        chapterByID.chapterStory = extractAndFormatStory(
+            dict(chapterByID.chapterStory), request
+        )
+
     return chapterByID
 
 

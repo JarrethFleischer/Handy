@@ -6,18 +6,25 @@ from pydantic import BaseModel, Field
 class QuestionSchema(BaseModel):
     questionNo: int
     questionTitle: str
-    questionText: str
+    questionText: Optional[str] = None  # Made optional for quiz-type questions
+    questionQuiz: Optional[List[str]] = (
+        None  # Fixed syntax error (replaced 'as' with ':')
+    )
     questionVideo: Optional[str] = None
 
 
 class LessonSchema(BaseModel):
     lessonNo: int
-    lessonDesc: str
+    lessonTitle: Optional[str] = None
+    lessonDesc: Optional[str] = (
+        None  # Made optional to prevent strict validation failures
+    )
     lessonQuestions: List[QuestionSchema]
 
 
 class ChapterStorySchema(BaseModel):
     chapterTitle: str
+    chapterDesc: Optional[str] = None
     chapterContent: List[LessonSchema]
 
 
