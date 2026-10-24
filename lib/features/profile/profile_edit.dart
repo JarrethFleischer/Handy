@@ -216,12 +216,6 @@ class _EditProfileViewState extends State<EditProfileView> {
                       Icons.email_outlined,
                       _email,
                     ),
-                    _buildTextField(
-                      'About Me',
-                      Icons.edit_note,
-                      _bio,
-                      maxLines: 3,
-                    ),
 
                     const SizedBox(height: 24),
 

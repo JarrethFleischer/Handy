@@ -372,14 +372,14 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       _practiceStarted = false;
       _countdownRemaining = _practiceSeconds;
     });
-    await showSignResultDialog(
+    final accepted = await showSignResultDialog(
       context,
       correct: passed,
       sign: widget.expectedSign ?? '',
       xpEarned: passed ? widget.xpReward : 0,
     );
     if (!mounted) return;
-    if (passed) {
+    if (accepted) {
       Navigator.pop(context, true);
     }
   }

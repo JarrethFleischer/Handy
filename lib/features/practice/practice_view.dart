@@ -166,7 +166,7 @@ class _PracticeViewState extends State<PracticeView> {
                   _PracticeCard(
                     icon: Icons.videocam_rounded,
                     title: 'Quiz',
-                    description: 'Using Ai camera to test your knowledge',
+                    description: 'Practice with AI camera',
                     onTap: () {
                       Navigator.push(
                         context,
@@ -178,7 +178,7 @@ class _PracticeViewState extends State<PracticeView> {
                   _PracticeCard(
                     icon: Icons.quiz,
                     title: 'Name the sign',
-                    description: 'Test your knowledge of hand signs',
+                    description: 'Test your knowledge',
                     onTap: () {
                       Navigator.push(
                         context,
@@ -254,7 +254,8 @@ class _PracticeCard extends StatelessWidget {
                       style: const TextStyle(
                         fontFamily: 'Inter',
                         color: AppColors.grayDark,
-                        fontSize: 10,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],

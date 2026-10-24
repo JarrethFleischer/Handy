@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handy/services/auth_service.dart';
 import 'package:handy/features/login/login.dart';
+import 'package:handy/features/navbar/navbar.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -23,14 +24,16 @@ class _SignupScreenState extends State<SignupScreen> {
         email: _email.text.trim(),
         password: _password.text,
       );
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Account created! Please log in.'),
-          backgroundColor: Colors.green,
-        ),
+      await AuthService.login(
+        username: _email.text.trim(),
+        password: _password.text,
       );
-      Navigator.pop(context); // back to LoginScreen
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const AppNavigationShell()),
+        (route) => false,
+      );
     } on AuthException catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -267,43 +270,6 @@ class _SignupScreenState extends State<SignupScreen> {
                                                       vertical: 16,
                                                     ),
                                               ),
-                                            ),
-                                            Divider(
-                                              height: 1,
-                                              color: Colors.grey[200],
-                                            ),
-
-                                            TextFormField(
-                                              controller: _dob,
-                                              readOnly:
-                                                  true, // Prevents typing, forces them to use the calendar
-                                              onTap:
-                                                  _selectDate, // Opens the calendar popup
-                                              decoration: const InputDecoration(
-                                                hintText: 'DD/MM/YYYY',
-                                                hintStyle: TextStyle(
-                                                  color: Colors.black38,
-                                                  fontSize: 14,
-                                                ),
-                                                prefixIcon: Icon(
-                                                  Icons.calendar_today_outlined,
-                                                  color: Color(0xFFF8AE2B),
-                                                  size: 25,
-                                                ),
-                                                suffixIcon: Icon(
-                                                  Icons.calendar_month,
-                                                  color: Colors.grey,
-                                                ),
-                                                border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      vertical: 16,
-                                                    ),
-                                              ),
-                                            ),
-                                            Divider(
-                                              height: 1,
-                                              color: Colors.grey[200],
                                             ),
                                             Divider(
                                               height: 1,

@@ -262,7 +262,7 @@ class _ProfileViewState extends State<ProfileView> {
                   ),
                   const SizedBox(height: 30),
                   // --- SETTINGS CARD ---
-                  _DailyStreakCard(),
+                  _DailyStreakCard(streak: _profile?.userStreakCount ?? 0),
                   const SizedBox(height: 30),
                   Padding(
                     padding: const EdgeInsets.fromLTRB(0, 0, 0, 5),
@@ -532,13 +532,16 @@ class _ProfileViewState extends State<ProfileView> {
 }
 
 class _DailyStreakCard extends StatelessWidget {
-  const _DailyStreakCard();
+  const _DailyStreakCard({required this.streak});
+
+  final int streak;
 
   static const _days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   @override
   Widget build(BuildContext context) {
     final todayIndex = DateTime.now().weekday % 7;
+    final filled = streak < 0 ? 0 : streak;
 
     return Container(
       width: double.infinity,
@@ -551,9 +554,9 @@ class _DailyStreakCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          const Text(
-            'Start daily streak!',
-            style: TextStyle(
+          Text(
+            filled == 0 ? 'Start daily streak!' : '$filled day streak',
+            style: const TextStyle(
               fontFamily: 'Inter',
               color: Color(0xFF14304A),
               fontSize: 20,
@@ -564,9 +567,10 @@ class _DailyStreakCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(_days.length, (index) {
+              final daysAgo = (todayIndex - index + 7) % 7;
               return _StreakDay(
                 label: _days[index],
-                isToday: index == todayIndex,
+                isDone: filled > 0 && daysAgo < filled,
               );
             }),
           ),
@@ -577,10 +581,10 @@ class _DailyStreakCard extends StatelessWidget {
 }
 
 class _StreakDay extends StatelessWidget {
-  const _StreakDay({required this.label, required this.isToday});
+  const _StreakDay({required this.label, required this.isDone});
 
   final String label;
-  final bool isToday;
+  final bool isDone;
 
   @override
   Widget build(BuildContext context) {
@@ -589,7 +593,7 @@ class _StreakDay extends StatelessWidget {
         SizedBox(
           width: 28,
           height: 28,
-          child: isToday
+          child: isDone
               ? Image.asset('assets/images/streak.png')
               : Center(
                   child: Container(
@@ -608,7 +612,7 @@ class _StreakDay extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: isToday ? AppColors.blueDark : AppColors.blueLight,
+            color: isDone ? AppColors.blueDark : AppColors.blueLight,
           ),
         ),
       ],

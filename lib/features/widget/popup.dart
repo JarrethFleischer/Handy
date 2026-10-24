@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:handy/features/feedback/feedback_screen.dart';
 import 'package:handy/theme/app_colors.dart';
 
 Future<bool> showLeaveLessonDialog(BuildContext context) async {
@@ -232,18 +233,18 @@ Future<bool> showResetProgressDialog(BuildContext context) async {
   return shouldReset ?? false;
 }
 
-Future<void> showSignResultDialog(
+Future<bool> showSignResultDialog(
   BuildContext context, {
   required bool correct,
   required String sign,
   int xpEarned = 0,
-}) {
+}) async {
   final headline = correct ? 'Correct!' : 'Try again';
   final message = correct
       ? 'Amazing job, you\'ve earned $xpEarned XP'
       : 'Not quite';
 
-  return showDialog<void>(
+  final accepted = await showDialog<bool>(
     context: context,
     barrierDismissible: false,
     builder: (dialogContext) {
@@ -280,7 +281,7 @@ Future<void> showSignResultDialog(
               width: double.infinity,
               height: 48,
               child: FilledButton(
-                onPressed: () => Navigator.pop(dialogContext),
+                onPressed: () => Navigator.pop(dialogContext, correct),
                 style: FilledButton.styleFrom(
                   backgroundColor: AppColors.blueDark,
                   foregroundColor: Colors.white,
@@ -299,9 +300,110 @@ Future<void> showSignResultDialog(
                 ),
               ),
             ),
+            if (!correct) ...[
+              const SizedBox(height: 8),
+              TextButton(
+                onPressed: () async {
+                  final skipped = await showSkipPracticeDialog(dialogContext);
+                  if (skipped && dialogContext.mounted) {
+                    Navigator.pop(dialogContext, true);
+                  }
+                },
+                child: const Text(
+                  'I did it right',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    color: AppColors.blueDark,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    decoration: TextDecoration.underline,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       );
     },
   );
+
+  return accepted ?? false;
+}
+
+Future<bool> showSkipPracticeDialog(BuildContext context) async {
+  final skipped = await showDialog<bool>(
+    context: context,
+    builder: (dialogContext) {
+      return AlertDialog(
+        backgroundColor: Colors.white,
+        surfaceTintColor: Colors.transparent,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'Did you do it right?',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                color: Color(0xFF1F2933),
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              'Skip the practice if you think the AI is incorrect.',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                color: Color(0xFF6B7280),
+                fontSize: 14,
+                height: 1.3,
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: FilledButton(
+                onPressed: () => Navigator.pop(dialogContext, true),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.blueDark,
+                  foregroundColor: Colors.white,
+                  elevation: 0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  'Back to Quiz',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => FeedbackScreen.show(dialogContext),
+              child: const Text(
+                'Send us feedback!',
+                style: TextStyle(
+                  fontFamily: 'Inter',
+                  color: AppColors.blueDark,
+                  fontSize: 14,
+                  decoration: TextDecoration.underline,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+
+  return skipped ?? false;
 }

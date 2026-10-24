@@ -126,13 +126,8 @@ class _LeaderboardViewState extends State<LeaderboardView> {
     return null;
   }
 
-  /// Ranks shown in the list: always 4 to 10, plus any real ranks beyond 10.
   List<int> get _listRanks {
-    final ranks = <int>{for (var r = 4; r <= 10; r++) r};
-    for (final user in _users) {
-      if (user.userRank > 3) ranks.add(user.userRank);
-    }
-    return ranks.toList()..sort();
+    return [for (var r = 4; r <= 10; r++) r];
   }
 
   LeaderboardUser? _userAtRank(int rank) {
@@ -581,7 +576,9 @@ class _MyRankBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = profile?.userName ?? '-';
-    final points = profile == null ? 'Score: -' : 'Score: ${profile!.userXP} Pts';
+    final points = profile == null
+        ? 'Score: -'
+        : 'Score: ${profile!.userXP} Pts';
     final rankLabel = rank == null ? '#-' : '#$rank';
     return Container(
       margin: const EdgeInsets.fromLTRB(0, 12, 0, 12),
