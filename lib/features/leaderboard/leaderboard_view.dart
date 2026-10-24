@@ -1,25 +1,39 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/leaderboard/leaderboard_controller.dart';
+import 'package:handy/services/auth_service.dart';
 import 'package:handy/theme/app_colors.dart';
 
 class LeaderboardView extends StatefulWidget {
-  const LeaderboardView({super.key});
+  const LeaderboardView({this.isActive = false, super.key});
 
-  static const primaryText = Color(0xFF14181B);
-  static const card = Color(0xFFFFFFFF);
+  final bool isActive;
+
+  static const navy = Color(0xFF14304A);
+  static const page = Color(0xFFEAF5FF);
+  static const header = Color(0xFF9AD5FF);
+  static const accent = Color(0xFF67B5FF);
+  static const muted = Color(0xFF6B7280);
+  static const divider = Color(0xFFEDF1F3);
 
   static const body = TextStyle(
     fontFamily: 'Inter',
-    color: primaryText,
+    color: navy,
     fontSize: 14,
-    fontWeight: FontWeight.w400,
+    fontWeight: FontWeight.w500,
+  );
+
+  static const caption = TextStyle(
+    fontFamily: 'Inter',
+    color: muted,
+    fontSize: 12,
+    fontWeight: FontWeight.w500,
   );
 
   static const title = TextStyle(
     fontFamily: 'Inter',
-    color: primaryText,
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
+    color: navy,
+    fontSize: 20,
+    fontWeight: FontWeight.w700,
   );
 
   @override
@@ -27,16 +41,39 @@ class LeaderboardView extends StatefulWidget {
 }
 
 class _LeaderboardViewState extends State<LeaderboardView> {
+  static const double _rowHeight = 56;
+  static const _months = [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+
   final _controller = LeaderboardController();
 
   List<LeaderboardUser> _users = [];
+  CurrentUserProfile? _me;
   bool _loading = true;
   String? _error;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    if (widget.isActive) _load();
+  }
+
+  @override
+  void didUpdateWidget(LeaderboardView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) _load();
   }
 
   Future<void> _load() async {
@@ -45,11 +82,25 @@ class _LeaderboardViewState extends State<LeaderboardView> {
       _error = null;
     });
 
-    try {
-      final users = await _controller.fetchLeaderboard();
+    final userId = AuthService.currentUserId;
+    if (userId == null) {
       if (!mounted) return;
       setState(() {
-        _users = users;
+        _error = 'Could not load the leaderboard';
+        _loading = false;
+      });
+      return;
+    }
+
+    try {
+      final results = await Future.wait([
+        _controller.fetchLeaderboard(),
+        _controller.fetchCurrentUser(userId),
+      ]);
+      if (!mounted) return;
+      setState(() {
+        _users = results[0] as List<LeaderboardUser>;
+        _me = results[1] as CurrentUserProfile;
         _loading = false;
       });
     } catch (_) {
@@ -59,6 +110,29 @@ class _LeaderboardViewState extends State<LeaderboardView> {
         _loading = false;
       });
     }
+  }
+
+  String get _today {
+    final now = DateTime.now();
+    return '${now.day} ${_months[now.month - 1]} ${now.year}';
+  }
+
+  int? get _myRank {
+    final me = _me;
+    if (me == null) return null;
+    for (final user in _users) {
+      if (user.userID == me.userID) return user.userRank;
+    }
+    return null;
+  }
+
+  /// Ranks shown in the list: always 4 to 10, plus any real ranks beyond 10.
+  List<int> get _listRanks {
+    final ranks = <int>{for (var r = 4; r <= 10; r++) r};
+    for (final user in _users) {
+      if (user.userRank > 3) ranks.add(user.userRank);
+    }
+    return ranks.toList()..sort();
   }
 
   LeaderboardUser? _userAtRank(int rank) {
@@ -85,17 +159,24 @@ class _LeaderboardViewState extends State<LeaderboardView> {
       );
     }
 
-    return ListView.separated(
-      itemCount: 7,
-      separatorBuilder: (context, index) =>
-          const Divider(color: AppColors.gray, height: 1, thickness: 0.5),
+    final ranks = _listRanks;
+    final myId = _me?.userID;
+    return ListView.builder(
+      itemExtent: _rowHeight,
+      itemCount: ranks.length,
       itemBuilder: (context, index) {
-        final rank = index + 4;
-        final entry = _userAtRank(rank);
+        final rank = ranks[index];
+        final user = _userAtRank(rank);
+        final showDivider = index < ranks.length - 1;
+        if (user == null) {
+          return _PlaceholderRow(rank: rank, showDivider: showDivider);
+        }
         return _LeaderboardRow(
           rank: rank,
-          name: entry?.userName ?? '-',
-          points: entry == null ? '-' : '${entry.userXP}',
+          name: user.userName,
+          points: '${user.userXP}',
+          isMe: user.userID == myId,
+          showDivider: showDivider,
         );
       },
     );
@@ -103,98 +184,89 @@ class _LeaderboardViewState extends State<LeaderboardView> {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/images/background.png'),
-            fit: BoxFit.cover,
-            opacity: 0.5,
+    final showMyCard = !_loading && _error == null;
+
+    return Scaffold(
+      backgroundColor: LeaderboardView.page,
+      body: Stack(
+        children: [
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 200,
+              decoration: BoxDecoration(
+                color: LeaderboardView.header,
+                borderRadius: BorderRadius.vertical(
+                  bottom: Radius.elliptical(
+                    MediaQuery.of(context).size.width,
+                    150,
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          body: SafeArea(
-            top: true,
+          SafeArea(
             child: Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(20, 0, 20, 0),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
+                  const SizedBox(height: 12),
+                  const Text('Leaderboard', style: LeaderboardView.title),
+                  const SizedBox(height: 2),
+                  Text(_today, style: LeaderboardView.body),
+                  const SizedBox(height: 20),
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Column(
-                        children: [
-                          const Text(
-                            'Leaderboard',
-                            style: LeaderboardView.title,
-                          ),
-                          Text('18 October 2026', style: LeaderboardView.body),
-                        ],
+                      _PodiumPlace(
+                        user: _userAtRank(2),
+                        rank: 2,
+                        barHeight: 72,
+                        color: LeaderboardView.accent,
+                      ),
+                      _PodiumPlace(
+                        user: _userAtRank(1),
+                        rank: 1,
+                        barHeight: 100,
+                        color: AppColors.yellow,
+                      ),
+                      _PodiumPlace(
+                        user: _userAtRank(3),
+                        rank: 3,
+                        barHeight: 52,
+                        color: AppColors.blueLight,
                       ),
                     ],
-                  ),
-                  Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(0, 30, 0, 0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        _PodiumPlace(
-                          user: _userAtRank(2),
-                          rank: 2,
-                          barHeight: 70,
-                          color: const Color(0xFFAAA9AD),
-                        ),
-                        _PodiumPlace(
-                          user: _userAtRank(1),
-                          rank: 1,
-                          barHeight: 100,
-                          color: const Color(0xFFFFD700),
-                        ),
-                        _PodiumPlace(
-                          user: _userAtRank(3),
-                          rank: 3,
-                          barHeight: 50,
-                          color: const Color(0xFFCD7F32),
-                        ),
-                      ],
-                    ),
                   ),
                   Expanded(
                     child: Container(
                       width: double.infinity,
-                      margin: const EdgeInsets.only(top: 10),
-                      padding: const EdgeInsets.fromLTRB(0, 8, 0, 4),
+                      margin: const EdgeInsets.only(top: 12),
                       decoration: BoxDecoration(
-                        color: LeaderboardView.card,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.gray, width: 0.5),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
                       ),
+                      clipBehavior: Clip.antiAlias,
                       child: Column(
                         children: [
                           const _LeaderboardHeader(),
-                          const Divider(
-                            color: AppColors.gray,
-                            height: 1,
-                            thickness: 0.5,
-                          ),
                           Expanded(child: _buildList()),
                         ],
                       ),
                     ),
                   ),
-                  const _MyRankBar(),
+                  if (showMyCard)
+                    _MyRankBar(profile: _me, rank: _myRank)
+                  else
+                    const SizedBox(height: 12),
                 ],
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -215,57 +287,110 @@ class _PodiumPlace extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        SizedBox(
-          width: 78,
-          height: rank == 1 ? 92 : 78,
-          child: Stack(
-            alignment: Alignment.bottomCenter,
+    final isFirst = rank == 1;
+    final avatarSize = isFirst ? 80.0 : 64.0;
+    final badgeText = isFirst ? LeaderboardView.navy : Colors.white;
+
+    return SizedBox(
+      width: 100,
+      child: Column(
+        children: [
+          if (isFirst)
+            const Icon(
+              Icons.workspace_premium,
+              color: AppColors.yellowDark,
+              size: 28,
+            ),
+          SizedBox(
+            width: avatarSize,
+            height: avatarSize + 10,
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.topCenter,
+              children: [
+                Container(
+                  width: avatarSize,
+                  height: avatarSize,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: color, width: 3),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: Image.asset(
+                    'assets/images/profile_pic.png',
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Positioned(
+                  bottom: 0,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: color,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: 2),
+                    ),
+                    child: Text(
+                      '$rank',
+                      style: TextStyle(
+                        color: badgeText,
+                        fontSize: 11,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            user?.userName ?? '-',
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontFamily: 'Inter',
+              color: LeaderboardView.navy,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                width: 70,
-                height: 70,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.white,
-                  border: Border.all(color: color, width: 1),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: Image.asset(
-                  'assets/images/profile_pic.png',
-                  fit: BoxFit.fill,
-                ),
-              ),
+              Image.asset('assets/images/trophy.png', width: 14, height: 14),
+              const SizedBox(width: 4),
+              Text('${user?.userXP ?? 0}', style: LeaderboardView.body),
             ],
           ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          user?.userName ?? '-',
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-        ),
-        Row(
-          children: [
-            Image.asset('assets/images/trophy.png', width: 14, height: 14),
-            const SizedBox(width: 4),
-            Text('${user?.userXP ?? 0}', style: LeaderboardView.body),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Container(
-          width: 100,
-          height: barHeight,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(10),
-              topRight: Radius.circular(10),
+          const SizedBox(height: 8),
+          Container(
+            width: 96,
+            height: barHeight,
+            alignment: Alignment.topCenter,
+            padding: const EdgeInsets.only(top: 8),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(12),
+              ),
             ),
-            color: color,
+            child: Text(
+              '$rank',
+              style: TextStyle(
+                color: badgeText,
+                fontSize: 22,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -275,13 +400,19 @@ class _LeaderboardHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 16),
-      child: Row(
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 14, 18, 10),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: LeaderboardView.divider)),
+      ),
+      child: const Row(
         children: [
-          SizedBox(width: 48, child: Text('Rank', style: LeaderboardView.body)),
-          Expanded(child: Text('Name', style: LeaderboardView.body)),
-          Text('Points', style: LeaderboardView.body),
+          SizedBox(
+            width: 42,
+            child: Text('Rank', style: LeaderboardView.caption),
+          ),
+          Expanded(child: Text('Name', style: LeaderboardView.caption)),
+          Text('Points', style: LeaderboardView.caption),
         ],
       ),
     );
@@ -293,57 +424,121 @@ class _LeaderboardRow extends StatelessWidget {
     required this.rank,
     required this.name,
     required this.points,
+    required this.isMe,
+    required this.showDivider,
   });
 
   final int rank;
   final String name;
   final String points;
+  final bool isMe;
+  final bool showDivider;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 18),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      decoration: BoxDecoration(
+        color: isMe ? LeaderboardView.page : Colors.white,
+        border: showDivider
+            ? const Border(bottom: BorderSide(color: LeaderboardView.divider))
+            : null,
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 42,
+            child: Text('$rank', style: LeaderboardView.body),
+          ),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: const BoxDecoration(shape: BoxShape.circle),
+            clipBehavior: Clip.antiAlias,
+            child: Image.asset(
+              'assets/images/profile_pic.png',
+              fit: BoxFit.cover,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: LeaderboardView.body.copyWith(
+                fontWeight: isMe ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ),
+          if (isMe) ...[const _YouTag(), const SizedBox(width: 10)],
+          Image.asset('assets/images/trophy.png', width: 14, height: 14),
+          const SizedBox(width: 4),
+          Text(points, style: LeaderboardView.body),
+        ],
+      ),
+    );
+  }
+}
+
+class _PlaceholderRow extends StatelessWidget {
+  const _PlaceholderRow({required this.rank, required this.showDivider});
+
+  final int rank;
+  final bool showDivider;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 18),
+      decoration: BoxDecoration(
+        border: showDivider
+            ? const Border(bottom: BorderSide(color: LeaderboardView.divider))
+            : null,
+      ),
       child: Row(
         children: [
           SizedBox(
             width: 42,
             child: Text(
               '$rank',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              style: LeaderboardView.body.copyWith(color: AppColors.gray),
             ),
           ),
-          Expanded(
-            child: Row(
-              children: [
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(shape: BoxShape.circle),
-                  clipBehavior: Clip.antiAlias,
-                  child: Image.asset(
-                    'assets/images/profile_pic.png',
-                    fit: BoxFit.cover,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    name,
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                ),
-              ],
+          Container(
+            width: 32,
+            height: 32,
+            decoration: const BoxDecoration(
+              color: LeaderboardView.page,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.person_outline,
+              size: 18,
+              color: LeaderboardView.accent,
             ),
           ),
-          Row(
-            children: [
-              Image.asset('assets/images/trophy.png', width: 14, height: 14),
-              SizedBox(width: 4),
-              Text(
-                points,
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              '-',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                color: AppColors.gray,
+                fontSize: 13,
+                fontStyle: FontStyle.italic,
               ),
-            ],
+            ),
+          ),
+          Container(
+            width: 36,
+            height: 10,
+            decoration: BoxDecoration(
+              color: AppColors.grayLight,
+              borderRadius: BorderRadius.circular(5),
+            ),
           ),
         ],
       ),
@@ -351,20 +546,52 @@ class _LeaderboardRow extends StatelessWidget {
   }
 }
 
-class _MyRankBar extends StatelessWidget {
-  const _MyRankBar();
+class _YouTag extends StatelessWidget {
+  const _YouTag();
 
   @override
   Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        color: LeaderboardView.accent,
+        borderRadius: BorderRadius.all(Radius.circular(6)),
+      ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        child: Text(
+          'YOU',
+          style: TextStyle(
+            fontFamily: 'Inter',
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MyRankBar extends StatelessWidget {
+  const _MyRankBar({required this.profile, required this.rank});
+
+  final CurrentUserProfile? profile;
+  final int? rank;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = profile?.userName ?? '-';
+    final points = profile == null ? 'Score: -' : 'Score: ${profile!.userXP} Pts';
+    final rankLabel = rank == null ? '#-' : '#$rank';
     return Container(
-      margin: const EdgeInsets.fromLTRB(0, 12, 0, 8),
+      margin: const EdgeInsets.fromLTRB(0, 12, 0, 12),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x1A000000),
+            color: Color(0x1A14304A),
             blurRadius: 16,
             offset: Offset(0, 4),
           ),
@@ -377,12 +604,12 @@ class _MyRankBar extends StatelessWidget {
             height: 44,
             alignment: Alignment.center,
             decoration: const BoxDecoration(
-              color: AppColors.blueLight,
-              shape: BoxShape.circle,
+              color: LeaderboardView.accent,
+              borderRadius: BorderRadius.all(Radius.circular(10)),
             ),
-            child: const Text(
-              '#1',
-              style: TextStyle(
+            child: Text(
+              rankLabel,
+              style: const TextStyle(
                 fontFamily: 'Inter',
                 color: Colors.white,
                 fontSize: 14,
@@ -394,10 +621,7 @@ class _MyRankBar extends StatelessWidget {
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.gray, width: 0.5),
-            ),
+            decoration: const BoxDecoration(shape: BoxShape.circle),
             clipBehavior: Clip.antiAlias,
             child: Image.asset(
               'assets/images/profile_pic.png',
@@ -405,7 +629,7 @@ class _MyRankBar extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -413,50 +637,22 @@ class _MyRankBar extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        'Zainal',
+                        name,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontFamily: 'Inter',
-                          color: LeaderboardView.primaryText,
+                          color: LeaderboardView.navy,
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
                         ),
                       ),
                     ),
-                    SizedBox(width: 6),
-                    DecoratedBox(
-                      decoration: BoxDecoration(
-                        color: AppColors.blueLight,
-                        borderRadius: BorderRadius.all(Radius.circular(6)),
-                      ),
-                      child: Padding(
-                        padding: EdgeInsets.symmetric(
-                          horizontal: 6,
-                          vertical: 2,
-                        ),
-                        child: Text(
-                          'YOU',
-                          style: TextStyle(
-                            fontFamily: 'Inter',
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
+                    const SizedBox(width: 6),
+                    const _YouTag(),
                   ],
                 ),
-                SizedBox(height: 2),
-                Text(
-                  '169 Points',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    color: Color(0xFF6B7280),
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
+                const SizedBox(height: 2),
+                Text(points, style: LeaderboardView.caption),
               ],
             ),
           ),

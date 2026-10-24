@@ -1,21 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/chapters/chapter 1/learn_sign_question.dart';
+import 'package:handy/features/chapters/chapter 1/lesson_flow.dart';
 import 'package:handy/features/widget/sound.dart';
 import 'package:handy/theme/app_colors.dart';
 
 class TrueOrFalseQuestion extends StatefulWidget {
   const TrueOrFalseQuestion({
-    required this.videoAsset,
     required this.statement,
     required this.correctAnswer,
     required this.onContinue,
+    this.videoAsset,
+    this.videoUrl,
     super.key,
   });
 
-  final String videoAsset;
+  final String? videoAsset;
+  final String? videoUrl;
   final String statement;
   final bool correctAnswer;
-  final VoidCallback onContinue;
+  final LessonContinue onContinue;
 
   @override
   State<TrueOrFalseQuestion> createState() => _TrueOrFalseQuestionState();
@@ -24,6 +27,7 @@ class TrueOrFalseQuestion extends StatefulWidget {
 class _TrueOrFalseQuestionState extends State<TrueOrFalseQuestion> {
   bool? _selectedAnswer;
   bool _hasSubmitted = false;
+  bool _missed = false;
 
   bool get _isCorrect => _selectedAnswer == widget.correctAnswer;
 
@@ -37,6 +41,7 @@ class _TrueOrFalseQuestionState extends State<TrueOrFalseQuestion> {
         playCorrectSound();
       } else {
         playIncorrectSound();
+        _missed = true;
       }
       setState(() {
         _hasSubmitted = true;
@@ -44,14 +49,7 @@ class _TrueOrFalseQuestionState extends State<TrueOrFalseQuestion> {
       return;
     }
 
-    if (_isCorrect) {
-      widget.onContinue();
-    } else {
-      setState(() {
-        _selectedAnswer = null;
-        _hasSubmitted = false;
-      });
-    }
+    widget.onContinue(_isCorrect && !_missed, awardsPoints: true);
   }
 
   @override
@@ -63,35 +61,33 @@ class _TrueOrFalseQuestionState extends State<TrueOrFalseQuestion> {
           child: _TypePill(label: 'TRUE OR FALSE'),
         ),
         Padding(
-          padding: const EdgeInsets.fromLTRB(20, 16, 20, 16),
+          padding: const EdgeInsets.fromLTRB(0, 16, 0, 16),
           child: ClipRRect(
-            borderRadius: BorderRadius.circular(16),
             child: LessonVideo(
-              key: ValueKey(widget.videoAsset),
-              assetPath: widget.videoAsset,
+              key: ValueKey(widget.videoUrl ?? widget.videoAsset),
+              assetPath: widget.videoUrl == null ? widget.videoAsset : null,
+              videoUrl: widget.videoUrl,
             ),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppColors.blueLight, width: 2),
-            ),
+        Container(
+          width: double.infinity,
+          height: 50,
+          margin: const EdgeInsets.symmetric(horizontal: 20.0),
+          decoration: BoxDecoration(
+            border: Border.all(color: AppColors.blueDark),
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Center(
             child: Text(
               widget.statement,
-              textAlign: TextAlign.center,
               style: const TextStyle(
                 fontFamily: 'Inter',
                 color: AppColors.textDark,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                height: 1.35,
+                fontSize: 18,
+                fontWeight: FontWeight.w400,
               ),
+              textAlign: TextAlign.center,
             ),
           ),
         ),
@@ -140,7 +136,7 @@ class _TrueOrFalseQuestionState extends State<TrueOrFalseQuestion> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _isCorrect ? 'Correct!' : 'Try again',
+                  _isCorrect ? 'Correct!' : 'Incorrect',
                   style: TextStyle(
                     fontFamily: 'Inter',
                     fontSize: 16,
@@ -153,11 +149,7 @@ class _TrueOrFalseQuestionState extends State<TrueOrFalseQuestion> {
           ),
         const Spacer(),
         LessonButton(
-          label: !_hasSubmitted
-              ? 'Continue'
-              : _isCorrect
-              ? 'Continue'
-              : 'Try again',
+          label: 'Continue',
           onPressed: _selectedAnswer == null ? null : _handleContinue,
         ),
       ],
@@ -234,7 +226,7 @@ class _AnswerButton extends StatelessWidget {
               fontFamily: 'Inter',
               color: Colors.white,
               fontSize: 16,
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),

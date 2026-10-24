@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:handy/services/auth_service.dart';
+
 /// Simple API client for feedback. Kept separate from auth_service.dart.
 /// Uses dart:io (no extra packages), same as the auth service.
 class FeedbackService {
@@ -11,9 +13,12 @@ class FeedbackService {
   /// Sends feedback. Returns the created feedback as a [FeedbackResult].
   /// Throws [FeedbackException] with a readable message on any failure.
   static Future<FeedbackResult> create({
-    required int userId,
     required String content,
   }) async {
+    final userId = AuthService.currentUserId;
+    if (userId == null) {
+      throw FeedbackException('You are not logged in.');
+    }
     final client = HttpClient()..connectionTimeout = _timeout;
     try {
       final request = await client.postUrl(

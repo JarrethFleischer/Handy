@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:handy/services/auth_service.dart';
+import 'package:handy/theme/app_colors.dart';
 
 class ForgotPasswordScreen extends StatefulWidget {
   const ForgotPasswordScreen({super.key});
@@ -9,10 +11,18 @@ class ForgotPasswordScreen extends StatefulWidget {
 }
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
-  static const Color _brandYellow = Color(0xFFFFD56B);
-  static const Color _brandOrange = Color(0xFFF59E0B);
-  static const Color _brandBlue = Color(0xFF1DA1F2);
-  static const Color _brandBlack = Color(0xFF0F0F0F);
+  static const Color _icon = Color(0xFFF8AE2B);
+  static const _title = TextStyle(
+    fontSize: 28,
+    fontWeight: FontWeight.w900,
+    height: 1.2,
+    color: Colors.black,
+  );
+  static const _body = TextStyle(
+    fontSize: 14,
+    fontWeight: FontWeight.w500,
+    color: Colors.black87,
+  );
 
   int _step = 0;
   bool _loading = false;
@@ -103,19 +113,19 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   }) {
     return InputDecoration(
       hintText: hint,
-      hintStyle: const TextStyle(color: Colors.black38, fontSize: 15),
-      prefixIcon: Icon(icon, color: _brandOrange, size: 20),
+      hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
+      prefixIcon: Icon(icon, color: _icon, size: 25),
       suffixIcon: suffixIcon,
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       enabledBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: Color(0xFFE0E0E0), width: 1.5),
+        borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: const BorderSide(color: _brandOrange, width: 2),
+        borderSide: BorderSide.none,
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
@@ -136,7 +146,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         style: const TextStyle(
           fontSize: 14,
           fontWeight: FontWeight.w600,
-          color: _brandBlack,
+          color: Colors.black,
         ),
       ),
     );
@@ -148,7 +158,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
       child: ElevatedButton(
         onPressed: _loading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _brandBlack,
+          backgroundColor: Colors.black,
           foregroundColor: Colors.white,
           disabledBackgroundColor: Colors.black54,
           elevation: 0,
@@ -161,8 +171,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                 height: 22,
                 width: 22,
                 child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  color: _brandYellow,
+                  strokeWidth: 2,
+                  color: Colors.white,
                 ),
               )
             : Row(
@@ -172,11 +182,15 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                     label,
                     style: const TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(Icons.arrow_forward, size: 18, color: Colors.white),
+                  const Icon(
+                    Icons.arrow_forward,
+                    size: 20,
+                    color: Colors.white,
+                  ),
                 ],
               ),
       ),
@@ -191,19 +205,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         children: [
           const Text(
             'Forgot password',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: _brandBlack,
-            ),
+            textAlign: TextAlign.center,
+            style: _title,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           const Text(
             'Please enter your email to receive an OTP code',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black54,
-            ),
+            textAlign: TextAlign.center,
+            style: _body,
           ),
           const SizedBox(height: 28),
           _fieldLabel('Your Email'),
@@ -235,19 +244,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         children: [
           const Text(
             'Check your email',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: _brandBlack,
-            ),
+            textAlign: TextAlign.center,
+            style: _title,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
             'Enter the OTP code sent to ${_email.text.trim()}',
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.black54,
-            ),
+            textAlign: TextAlign.center,
+            style: _body,
           ),
           const SizedBox(height: 28),
           _fieldLabel('OTP Code'),
@@ -267,9 +271,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
           Center(
             child: TextButton(
               onPressed: _loading ? null : _sendOtp,
-              style: TextButton.styleFrom(
-                foregroundColor: _brandBlue,
-              ),
+              style: TextButton.styleFrom(foregroundColor: Colors.blue),
               child: const Text(
                 'Resend OTP',
                 style: TextStyle(
@@ -292,19 +294,14 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         children: [
           const Text(
             'Set a new password',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: _brandBlack,
-            ),
+            textAlign: TextAlign.center,
+            style: _title,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           const Text(
             'Create a new password. Ensure it differs from previous ones.',
-            style: TextStyle(
-              fontSize: 14,
-              color: Colors.black54,
-            ),
+            textAlign: TextAlign.center,
+            style: _body,
           ),
           const SizedBox(height: 28),
           _fieldLabel('New Password'),
@@ -351,61 +348,92 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // Top bar: Circular Back Button + Yellow Step Pill
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  InkWell(
-                    onTap: _loading ? null : _back,
-                    borderRadius: BorderRadius.circular(22),
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFF2F2F2),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.chevron_left,
-                        color: _brandBlack,
-                        size: 26,
-                      ),
-                    ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _brandYellow,
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Text(
-                      'Step ${_step + 1} of 3',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.bold,
-                        color: _brandBlack,
-                      ),
-                    ),
-                  ),
-                ],
+      body: SizedBox.expand(
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Image.asset(
+                'assets/images/auth_bg.png',
+                fit: BoxFit.cover,
+                alignment: Alignment.center,
               ),
-              const SizedBox(height: 32),
-              // Only one step visible at a time.
-              Visibility(visible: _step == 0, child: _emailStep()),
-              Visibility(visible: _step == 1, child: _otpStep()),
-              Visibility(visible: _step == 2, child: _passwordStep()),
-            ],
-          ),
+            ),
+            SafeArea(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: Column(
+                    children: [
+                      SvgPicture.asset('assets/images/logo.svg', height: 40),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.all(24),
+                        decoration: BoxDecoration(
+                          color: AppColors.yellowLight,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Row(
+                              children: [
+                                TextButton.icon(
+                                  onPressed: _loading ? null : _back,
+                                  icon: const Icon(
+                                    Icons.arrow_back_ios,
+                                    size: 16,
+                                    color: Colors.black,
+                                  ),
+                                  label: const Text(
+                                    'Back',
+                                    style: TextStyle(
+                                      color: Colors.black,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                  style: TextButton.styleFrom(
+                                    foregroundColor: Colors.black,
+                                    padding: EdgeInsets.zero,
+                                  ),
+                                ),
+                                const Spacer(),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.black,
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  child: Text(
+                                    'Step ${_step + 1} of 3',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 16),
+                            Visibility(
+                              visible: _step == 0,
+                              child: _emailStep(),
+                            ),
+                            Visibility(visible: _step == 1, child: _otpStep()),
+                            Visibility(
+                              visible: _step == 2,
+                              child: _passwordStep(),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

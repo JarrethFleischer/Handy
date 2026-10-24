@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/chapters/chapter 1/learn_sign_question.dart';
+import 'package:handy/features/chapters/chapter 1/lesson_flow.dart';
 import 'package:handy/features/widget/sound.dart';
 import 'package:handy/theme/app_colors.dart';
 
 class VideoMatchPair {
-  const VideoMatchPair({required this.videoAsset, required this.label});
+  const VideoMatchPair({required this.label, this.videoAsset, this.videoUrl});
 
-  final String videoAsset;
+  final String? videoAsset;
+  final String? videoUrl;
   final String label;
 }
 
@@ -18,7 +20,7 @@ class MatchVideoQuiz extends StatefulWidget {
   });
 
   final List<VideoMatchPair> pairs;
-  final VoidCallback onContinue;
+  final LessonContinue onContinue;
 
   @override
   State<MatchVideoQuiz> createState() => _MatchVideoQuizState();
@@ -28,6 +30,7 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
   late final List<String?> _answers;
   int _currentVideoIndex = 0;
   bool _hasSubmitted = false;
+  bool _missed = false;
 
   bool get _allAnswered => _answers.every((answer) => answer != null);
 
@@ -100,6 +103,7 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
         playCorrectSound();
       } else {
         playIncorrectSound();
+        _missed = true;
       }
       setState(() {
         _hasSubmitted = true;
@@ -108,7 +112,7 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
     }
 
     if (_allCorrect) {
-      widget.onContinue();
+      widget.onContinue(!_missed, awardsPoints: true);
     } else {
       setState(() {
         _hasSubmitted = false;
@@ -142,8 +146,13 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
                   child: AnimatedSwitcher(
                     duration: const Duration(milliseconds: 250),
                     child: LessonVideo(
-                      key: ValueKey(currentPair.videoAsset),
-                      assetPath: currentPair.videoAsset,
+                      key: ValueKey(
+                        currentPair.videoUrl ?? currentPair.videoAsset,
+                      ),
+                      assetPath: currentPair.videoUrl == null
+                          ? currentPair.videoAsset
+                          : null,
+                      videoUrl: currentPair.videoUrl,
                       height: 210,
                     ),
                   ),
@@ -207,7 +216,7 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
                   icon: Icons.check_circle,
                   title: 'Correct!',
                   buttonLabel: 'Continue',
-                  onPressed: widget.onContinue,
+                  onPressed: () => widget.onContinue(!_missed, awardsPoints: true),
                 )
               : _hasSubmitted
               ? _AnswerSheet(
@@ -215,7 +224,7 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
                   icon: Icons.cancel,
                   title: 'Incorrect',
                   buttonLabel: 'Continue',
-                  onPressed: widget.onContinue,
+                  onPressed: () => widget.onContinue(false, awardsPoints: true),
                 )
               : LessonButton(
                   key: const ValueKey('match-check'),

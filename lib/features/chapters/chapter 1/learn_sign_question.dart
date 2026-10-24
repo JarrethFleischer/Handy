@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:handy/features/chapters/chapter 1/lesson_flow.dart';
 import 'package:handy/theme/app_colors.dart';
 import 'package:video_player/video_player.dart';
 
@@ -14,7 +15,7 @@ class LearnSignQuestion extends StatelessWidget {
   final String? videoAsset;
   final String? videoUrl;
   final String sign;
-  final VoidCallback onContinue;
+  final LessonContinue onContinue;
 
   @override
   Widget build(BuildContext context) {
@@ -64,7 +65,7 @@ class LearnSignQuestion extends StatelessWidget {
           ),
         ),
         const Spacer(),
-        LessonButton(label: 'Continue', onPressed: onContinue),
+        LessonButton(label: 'Continue', onPressed: () => onContinue(true)),
       ],
     );
   }

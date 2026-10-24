@@ -1,10 +1,48 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/practice/name_the_sign/name_the_sign_view.dart';
 import 'package:handy/features/practice/quiz/quiz_view.dart';
+import 'package:handy/features/leaderboard/leaderboard_controller.dart';
+import 'package:handy/services/auth_service.dart';
 import 'package:handy/theme/app_colors.dart';
 
-class PracticeView extends StatelessWidget {
-  const PracticeView({super.key});
+class PracticeView extends StatefulWidget {
+  const PracticeView({this.isActive = false, super.key});
+
+  final bool isActive;
+
+  @override
+  State<PracticeView> createState() => _PracticeViewState();
+}
+
+class _PracticeViewState extends State<PracticeView> {
+  final _userController = LeaderboardController();
+  int _userXP = 0;
+  int _userStreakCount = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isActive) _loadUser();
+  }
+
+  @override
+  void didUpdateWidget(PracticeView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) _loadUser();
+  }
+
+  Future<void> _loadUser() async {
+    final userId = AuthService.currentUserId;
+    if (userId == null) return;
+    try {
+      final profile = await _userController.fetchCurrentUser(userId);
+      if (!mounted) return;
+      setState(() {
+        _userXP = profile.userXP;
+        _userStreakCount = profile.userStreakCount;
+      });
+    } catch (_) {}
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -76,16 +114,16 @@ class PracticeView extends StatelessWidget {
                         Row(
                           children: [
                             Image.asset(
-                              'assets/images/coin.png',
+                              'assets/images/trophy.png',
                               width: 20,
                               height: 20,
                             ),
                             const SizedBox(width: 4),
-                            const Text(
-                              '0',
+                            Text(
+                              '$_userXP',
                               style: TextStyle(
                                 color: Color(0xFF14304A),
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 fontSize: 16,
                               ),
                             ),
@@ -97,11 +135,11 @@ class PracticeView extends StatelessWidget {
                               height: 20,
                             ),
                             const SizedBox(width: 4),
-                            const Text(
-                              '3',
+                            Text(
+                              '$_userStreakCount',
                               style: TextStyle(
                                 color: Color(0xFFFA6C5E),
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 fontSize: 16,
                               ),
                             ),

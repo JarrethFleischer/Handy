@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:country_picker/country_picker.dart';
 import 'package:handy/services/auth_service.dart';
+import 'package:handy/features/login/login.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -11,9 +11,6 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  String _selectedCountryCode = '+1'; // Default country code
-  String _selectedFlagEmoji = '🇺🇸'; // Default country flag
-
   final _formKey = GlobalKey<FormState>();
   bool _loading = false;
 
@@ -173,7 +170,15 @@ class _SignupScreenState extends State<SignupScreen> {
                                           ),
                                         ),
                                         GestureDetector(
-                                          onTap: () => Navigator.pop(context),
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const LoginScreen(),
+                                              ),
+                                            );
+                                          },
                                           child: const Text(
                                             'Login',
                                             style: TextStyle(
@@ -195,156 +200,157 @@ class _SignupScreenState extends State<SignupScreen> {
                                       child: Form(
                                         key: _formKey,
                                         child: Column(
-                                        children: [
-                                          // 1. NAME FIELD
-                                          TextFormField(
-                                            controller: _name,
-                                            validator: (v) =>
-                                                (v == null || v.trim().isEmpty)
-                                                ? 'Username is required'
-                                                : null,
-                                            textCapitalization:
-                                                TextCapitalization.words,
-                                            decoration: const InputDecoration(
-                                              hintText: 'Username',
-                                              hintStyle: TextStyle(
-                                                color: Colors.black38,
-                                                fontSize: 14,
+                                          children: [
+                                            // 1. NAME FIELD
+                                            TextFormField(
+                                              controller: _name,
+                                              validator: (v) =>
+                                                  (v == null ||
+                                                      v.trim().isEmpty)
+                                                  ? 'Username is required'
+                                                  : null,
+                                              textCapitalization:
+                                                  TextCapitalization.words,
+                                              decoration: const InputDecoration(
+                                                hintText: 'Username',
+                                                hintStyle: TextStyle(
+                                                  color: Colors.black38,
+                                                  fontSize: 14,
+                                                ),
+                                                prefixIcon: Icon(
+                                                  Icons.person_outline,
+                                                  color: Color(0xFFF8AE2B),
+                                                  size: 25,
+                                                ),
+                                                border: InputBorder.none,
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                      vertical: 16,
+                                                    ),
                                               ),
-                                              prefixIcon: Icon(
-                                                Icons.person_outline,
-                                                color: Color(0xFFF8AE2B),
-                                                size: 25,
-                                              ),
-                                              border: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    vertical: 16,
-                                                  ),
                                             ),
-                                          ),
-                                          Divider(
-                                            height: 1,
-                                            color: Colors.grey[200],
-                                          ),
-
-                                          TextFormField(
-                                            controller: _email,
-                                            validator: (v) {
-                                              if (v == null ||
-                                                  v.trim().isEmpty) {
-                                                return 'Email is required';
-                                              }
-                                              if (!emailRegex.hasMatch(
-                                                v.trim(),
-                                              )) {
-                                                return 'Enter a valid email';
-                                              }
-                                              return null;
-                                            },
-                                            keyboardType:
-                                                TextInputType.emailAddress,
-                                            decoration: const InputDecoration(
-                                              hintText: 'email@example.com',
-                                              hintStyle: TextStyle(
-                                                color: Colors.black38,
-                                                fontSize: 14,
-                                              ),
-                                              prefixIcon: Icon(
-                                                Icons.mail_outline,
-                                                color: Color(0xFFF8AE2B),
-                                                size: 25,
-                                              ),
-                                              border: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    vertical: 16,
-                                                  ),
+                                            Divider(
+                                              height: 1,
+                                              color: Colors.grey[200],
                                             ),
-                                          ),
-                                          Divider(
-                                            height: 1,
-                                            color: Colors.grey[200],
-                                          ),
 
-                                          TextFormField(
-                                            controller: _dob,
-                                            readOnly:
-                                                true, // Prevents typing, forces them to use the calendar
-                                            onTap:
-                                                _selectDate, // Opens the calendar popup
-                                            decoration: const InputDecoration(
-                                              hintText: 'DD/MM/YYYY',
-                                              hintStyle: TextStyle(
-                                                color: Colors.black38,
-                                                fontSize: 14,
+                                            TextFormField(
+                                              controller: _email,
+                                              validator: (v) {
+                                                if (v == null ||
+                                                    v.trim().isEmpty) {
+                                                  return 'Email is required';
+                                                }
+                                                if (!emailRegex.hasMatch(
+                                                  v.trim(),
+                                                )) {
+                                                  return 'Enter a valid email';
+                                                }
+                                                return null;
+                                              },
+                                              keyboardType:
+                                                  TextInputType.emailAddress,
+                                              decoration: const InputDecoration(
+                                                hintText: 'email@example.com',
+                                                hintStyle: TextStyle(
+                                                  color: Colors.black38,
+                                                  fontSize: 14,
+                                                ),
+                                                prefixIcon: Icon(
+                                                  Icons.mail_outline,
+                                                  color: Color(0xFFF8AE2B),
+                                                  size: 25,
+                                                ),
+                                                border: InputBorder.none,
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                      vertical: 16,
+                                                    ),
                                               ),
-                                              prefixIcon: Icon(
-                                                Icons.calendar_today_outlined,
-                                                color: Color(0xFFF8AE2B),
-                                                size: 25,
-                                              ),
-                                              suffixIcon: Icon(
-                                                Icons.calendar_month,
-                                                color: Colors.grey,
-                                              ),
-                                              border: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    vertical: 16,
-                                                  ),
                                             ),
-                                          ),
-                                          Divider(
-                                            height: 1,
-                                            color: Colors.grey[200],
-                                          ),
-                                          Divider(
-                                            height: 1,
-                                            color: Colors.grey[200],
-                                          ),
+                                            Divider(
+                                              height: 1,
+                                              color: Colors.grey[200],
+                                            ),
 
-                                          TextFormField(
-                                            controller: _password,
-                                            obscureText: _obscurePassword,
-                                            validator: (v) =>
-                                                (v == null || v.length < 6)
-                                                ? 'Password must be at least 6 characters'
-                                                : null,
-                                            decoration: InputDecoration(
-                                              hintText: 'Password',
-                                              hintStyle: TextStyle(
-                                                color: Colors.black38,
-                                                fontSize: 14,
-                                              ),
-                                              prefixIcon: const Icon(
-                                                Icons.lock_outline,
-                                                color: Color(0xFFF8AE2B),
-                                                size: 25,
-                                              ),
-                                              suffixIcon: IconButton(
-                                                icon: Icon(
-                                                  _obscurePassword
-                                                      ? Icons.visibility_off
-                                                      : Icons.visibility,
+                                            TextFormField(
+                                              controller: _dob,
+                                              readOnly:
+                                                  true, // Prevents typing, forces them to use the calendar
+                                              onTap:
+                                                  _selectDate, // Opens the calendar popup
+                                              decoration: const InputDecoration(
+                                                hintText: 'DD/MM/YYYY',
+                                                hintStyle: TextStyle(
+                                                  color: Colors.black38,
+                                                  fontSize: 14,
+                                                ),
+                                                prefixIcon: Icon(
+                                                  Icons.calendar_today_outlined,
+                                                  color: Color(0xFFF8AE2B),
+                                                  size: 25,
+                                                ),
+                                                suffixIcon: Icon(
+                                                  Icons.calendar_month,
                                                   color: Colors.grey,
                                                 ),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    _obscurePassword =
-                                                        !_obscurePassword;
-                                                  });
-                                                },
+                                                border: InputBorder.none,
+                                                contentPadding:
+                                                    EdgeInsets.symmetric(
+                                                      vertical: 16,
+                                                    ),
                                               ),
-                                              border: InputBorder.none,
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 16,
-                                                  ),
                                             ),
-                                          ),
-                                        ],
-                                      ),
+                                            Divider(
+                                              height: 1,
+                                              color: Colors.grey[200],
+                                            ),
+                                            Divider(
+                                              height: 1,
+                                              color: Colors.grey[200],
+                                            ),
+
+                                            TextFormField(
+                                              controller: _password,
+                                              obscureText: _obscurePassword,
+                                              validator: (v) =>
+                                                  (v == null || v.length < 6)
+                                                  ? 'Password must be at least 6 characters'
+                                                  : null,
+                                              decoration: InputDecoration(
+                                                hintText: 'Password',
+                                                hintStyle: TextStyle(
+                                                  color: Colors.black38,
+                                                  fontSize: 14,
+                                                ),
+                                                prefixIcon: const Icon(
+                                                  Icons.lock_outline,
+                                                  color: Color(0xFFF8AE2B),
+                                                  size: 25,
+                                                ),
+                                                suffixIcon: IconButton(
+                                                  icon: Icon(
+                                                    _obscurePassword
+                                                        ? Icons.visibility_off
+                                                        : Icons.visibility,
+                                                    color: Colors.grey,
+                                                  ),
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _obscurePassword =
+                                                          !_obscurePassword;
+                                                    });
+                                                  },
+                                                ),
+                                                border: InputBorder.none,
+                                                contentPadding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 16,
+                                                    ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: 24),
@@ -373,23 +379,24 @@ class _SignupScreenState extends State<SignupScreen> {
                                                     ),
                                               )
                                             : const Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.add,
-                                              size: 20,
-                                            ), // The Plus icon from Figma
-                                            SizedBox(width: 8),
-                                            Text(
-                                              'Sign Up',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.add,
+                                                    size: 20,
+                                                  ), // The Plus icon from Figma
+                                                  SizedBox(width: 8),
+                                                  Text(
+                                                    'Sign Up',
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                            ),
-                                          ],
-                                        ),
                                       ),
                                     ),
                                   ],

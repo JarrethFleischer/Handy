@@ -8,28 +8,52 @@ class LessonQuestion {
     required this.questionNo,
     required this.questionTitle,
     required this.questionText,
+    required this.questionQuiz,
+    required this.questionVideos,
     required this.questionVideo,
   });
 
   final int questionNo;
   final String questionTitle;
   final String questionText;
+  final List<String> questionQuiz;
+  final List<String> questionVideos;
   final String questionVideo;
 
   factory LessonQuestion.fromJson(Map<String, dynamic> json) {
+    final quiz = json['questionQuiz'];
+    final video = json['questionVideo'];
+    final videos = video is List
+        ? video
+              .map((item) => item.toString())
+              .where((item) => item.isNotEmpty)
+              .toList()
+        : video is String && video.isNotEmpty
+        ? [video]
+        : <String>[];
     return LessonQuestion(
       questionNo: (json['questionNo'] as num).toInt(),
-      questionTitle: json['questionTitle'] as String,
-      questionText: json['questionText'] as String,
-      questionVideo: json['questionVideo'] as String,
+      questionTitle: json['questionTitle'] as String? ?? '',
+      questionText: json['questionText'] as String? ?? '',
+      questionQuiz: quiz is List
+          ? quiz.map((item) => item.toString()).toList()
+          : const [],
+      questionVideos: videos,
+      questionVideo: videos.isEmpty ? '' : videos.first,
     );
   }
 
-  String get playableVideoUrl {
-    final video = Uri.parse(questionVideo);
+  String get playableVideoUrl => _playable(questionVideo);
+
+  List<String> get playableVideoUrls =>
+      questionVideos.map(_playable).toList();
+
+  static String _playable(String videoUrl) {
+    if (videoUrl.isEmpty) return videoUrl;
+    final video = Uri.parse(videoUrl);
     final base = Uri.parse(ApiConfig.baseUrl);
     final isLocalHost = video.host == '127.0.0.1' || video.host == 'localhost';
-    if (!isLocalHost) return questionVideo;
+    if (!isLocalHost) return videoUrl;
 
     return Uri(
       scheme: base.scheme,
@@ -42,12 +66,14 @@ class LessonQuestion {
 
 class Lesson {
   const Lesson({
+    required this.lessonTitle,
     required this.lessonNo,
     required this.lessonDesc,
     required this.lessonQuestions,
   });
 
   final int lessonNo;
+  final String lessonTitle;
   final String lessonDesc;
   final List<LessonQuestion> lessonQuestions;
 
@@ -55,7 +81,8 @@ class Lesson {
     final questions = json['lessonQuestions'] as List<dynamic>? ?? [];
     return Lesson(
       lessonNo: (json['lessonNo'] as num).toInt(),
-      lessonDesc: json['lessonDesc'] as String,
+      lessonTitle: json['lessonTitle'] as String? ?? '',
+      lessonDesc: json['lessonDesc'] as String? ?? '',
       lessonQuestions: questions
           .map((item) => LessonQuestion.fromJson(item as Map<String, dynamic>))
           .toList(),
@@ -66,16 +93,19 @@ class Lesson {
 class ChapterStory {
   const ChapterStory({
     required this.chapterTitle,
+    required this.chapterDesc,
     required this.chapterContent,
   });
 
   final String chapterTitle;
+  final String chapterDesc;
   final List<Lesson> chapterContent;
 
   factory ChapterStory.fromJson(Map<String, dynamic> json) {
     final content = json['chapterContent'] as List<dynamic>? ?? [];
     return ChapterStory(
       chapterTitle: json['chapterTitle'] as String,
+      chapterDesc: json['chapterDesc'] as String,
       chapterContent: content
           .map((item) => Lesson.fromJson(item as Map<String, dynamic>))
           .toList(),

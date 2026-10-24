@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:handy/features/login/login.dart'; // Import the SVG package
+import 'package:handy/features/login/login.dart';
+import 'package:handy/features/navbar/navbar.dart';
+import 'package:handy/services/auth_service.dart';
+import 'package:handy/features/sign up/signup.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -41,14 +44,21 @@ class SplashScreen extends StatelessWidget {
                         height: 32, // Adjust size as needed
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
+                        },
                         child: const Text(
                           'Login',
                           style: TextStyle(
                             color: Colors.white,
                             decoration: TextDecoration.underline,
                             decorationColor: Colors.white,
-                            fontSize: 18,
+                            fontSize: 17,
                           ),
                         ),
                       ),
@@ -169,12 +179,16 @@ class SplashScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(32),
                             ),
                           ),
-                          onPressed: () {
-                            Navigator.push(
+                          onPressed: () async {
+                            final signedIn = await AuthService.restoreSession();
+                            if (!context.mounted) return;
+                            final next = signedIn
+                                ? const AppNavigationShell()
+                                : const SignupScreen();
+                            Navigator.pushAndRemoveUntil(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginScreen(),
-                              ),
+                              MaterialPageRoute(builder: (context) => next),
+                              (route) => false,
                             );
                           },
                           child: const Text(

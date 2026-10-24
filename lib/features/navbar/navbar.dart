@@ -20,11 +20,11 @@ class _AppNavigationShellState extends State<AppNavigationShell> {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
-        children: const [
-          HomepageView(),
-          PracticeView(),
-          LeaderboardView(),
-          ProfileView(),
+        children: [
+          HomepageView(isActive: _currentIndex == 0),
+          PracticeView(isActive: _currentIndex == 1),
+          LeaderboardView(isActive: _currentIndex == 2),
+          ProfileView(isActive: _currentIndex == 3),
         ],
       ),
       bottomNavigationBar: AppBottomNavbar(

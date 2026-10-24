@@ -1,11 +1,59 @@
 import 'package:flutter/material.dart';
+import 'package:handy/features/feedback/feedback_screen.dart';
+import 'package:handy/features/leaderboard/leaderboard_controller.dart';
+import 'package:handy/features/profile/change_password.dart';
 import 'package:handy/features/profile/profile_edit.dart';
 import 'package:handy/features/login/login.dart';
 import 'package:handy/features/widget/popup.dart';
+import 'package:handy/services/auth_service.dart';
 import 'package:handy/theme/app_colors.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class ProfileView extends StatelessWidget {
-  const ProfileView({super.key});
+class ProfileView extends StatefulWidget {
+  const ProfileView({this.isActive = false, super.key});
+
+  final bool isActive;
+
+  @override
+  State<ProfileView> createState() => _ProfileViewState();
+}
+
+class _ProfileViewState extends State<ProfileView> {
+  final _controller = LeaderboardController();
+  CurrentUserProfile? _profile;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isActive) _load();
+  }
+
+  @override
+  void didUpdateWidget(ProfileView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) _load();
+  }
+
+  Future<void> _openEditProfile() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const EditProfileView()),
+    );
+    if (!mounted) return;
+    await _load();
+  }
+
+  Future<void> _load() async {
+    try {
+      final userId = AuthService.currentUserId;
+      if (userId == null) return;
+      final profile = await _controller.fetchCurrentUser(userId);
+      if (!mounted) return;
+      setState(() => _profile = profile);
+    } catch (_) {
+      if (!mounted) return;
+    }
+  }
 
   // Helper widget to build the settings rows cleanly
   Widget _buildListTile(IconData icon, String title, VoidCallback onTap) {
@@ -113,16 +161,16 @@ class ProfileView extends StatelessWidget {
                         Row(
                           children: [
                             Image.asset(
-                              'assets/images/coin.png',
+                              'assets/images/trophy.png',
                               width: 20,
                               height: 20,
                             ),
                             const SizedBox(width: 4),
-                            const Text(
-                              '0',
+                            Text(
+                              '${_profile?.userXP ?? 0}',
                               style: TextStyle(
                                 color: Color(0xFF14304A),
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 fontSize: 16,
                               ),
                             ),
@@ -134,11 +182,11 @@ class ProfileView extends StatelessWidget {
                               height: 20,
                             ),
                             const SizedBox(width: 4),
-                            const Text(
-                              '3',
+                            Text(
+                              '${_profile?.userStreakCount ?? 0}',
                               style: TextStyle(
                                 color: Color(0xFFFA6C5E),
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 fontSize: 16,
                               ),
                             ),
@@ -199,8 +247,8 @@ class ProfileView extends StatelessWidget {
                   const SizedBox(height: 12),
 
                   // --- NAME & EMAIL ---
-                  const Text(
-                    'Danish Syazwi',
+                  Text(
+                    _profile?.userName ?? '-',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
@@ -208,8 +256,8 @@ class ProfileView extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'danish25122004@gmail.com',
+                  Text(
+                    _profile?.userUsername ?? '-',
                     style: TextStyle(fontSize: 14, color: Colors.blueGrey),
                   ),
                   const SizedBox(height: 30),
@@ -249,21 +297,15 @@ class ProfileView extends StatelessWidget {
                           _buildListTile(
                             Icons.account_circle,
                             'Edit profile',
-                            () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => EditProfileView(),
-                                ),
-                              );
-                            },
+                            _openEditProfile,
                           ),
                           const Divider(height: 1, color: Color(0xFF9AD5FF)),
                           _buildListTile(Icons.password, 'Change password', () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => EditProfileView(),
+                                builder: (context) =>
+                                    const ChangePasswordView(),
                               ),
                             );
                           }),
@@ -302,11 +344,44 @@ class ProfileView extends StatelessWidget {
                       ),
                       child: Column(
                         children: [
-                          _buildListTile(Icons.repeat, 'Reset progress', () {
-                            Navigator.push(
+                          _buildListTile(Icons.repeat, 'Reset progress', () async {
+                            final confirmed = await showResetProgressDialog(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => EditProfileView(),
+                            );
+                            if (!confirmed || !context.mounted) return;
+                            try {
+                              await AuthService.resetXp();
+                            } on AuthException catch (error) {
+                              if (!context.mounted) return;
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text(error.message)),
+                              );
+                              return;
+                            }
+                            final prefs = await SharedPreferences.getInstance();
+                            final userId = '${AuthService.currentUserId}:';
+                            final saved =
+                                prefs.getStringList('lesson_scores') ?? [];
+                            await prefs.setStringList(
+                              'lesson_scores',
+                              saved
+                                  .where((item) => !item.startsWith(userId))
+                                  .toList(),
+                            );
+                            final completedQuiz =
+                                prefs.getStringList('quiz_completed') ?? [];
+                            await prefs.setStringList(
+                              'quiz_completed',
+                              completedQuiz
+                                  .where((item) => !item.startsWith(userId))
+                                  .toList(),
+                            );
+                            if (!context.mounted) return;
+                            await _load();
+                            if (!context.mounted) return;
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Progress reset to 0'),
                               ),
                             );
                           }),
@@ -349,7 +424,7 @@ class ProfileView extends StatelessWidget {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => EditProfileView(),
+                                builder: (context) => FeedbackScreen(),
                               ),
                             );
                           }),
@@ -375,12 +450,17 @@ class ProfileView extends StatelessWidget {
                         vertical: 14,
                       ),
                     ),
-                    onPressed: () {
-                      Navigator.push(
+                    onPressed: () async {
+                      await AuthService.logout();
+                      if (!context.mounted) return;
+                      Navigator.pushAndRemoveUntil(
                         context,
-                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                        (route) => false,
                       );
-                    }, // Empty action
+                    },
                     child: const Text(
                       'Logout',
                       style: TextStyle(
@@ -411,13 +491,26 @@ class ProfileView extends StatelessWidget {
                       if (!shouldDelete || !context.mounted) {
                         return;
                       }
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const LoginScreen(),
-                        ),
-                        (route) => false,
-                      );
+                      try {
+                        await AuthService.deleteUser();
+                        await AuthService.logout();
+                        if (!context.mounted) return;
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const LoginScreen(),
+                          ),
+                          (route) => false,
+                        );
+                      } on AuthException catch (e) {
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(e.message),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
                     },
                     child: const Text(
                       'Delete Account',

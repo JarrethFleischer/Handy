@@ -44,9 +44,9 @@ class _LoginScreenState extends State<LoginScreen> {
 
   void _showError(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: Colors.red),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
   }
 
   @override
@@ -105,7 +105,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           crossAxisAlignment: CrossAxisAlignment.stretch,
                           children: [
                             const Text(
-                              'Sign in to your\nAccount',
+                              'Log in to your\nAccount',
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 fontSize: 28,
@@ -152,80 +152,83 @@ class _LoginScreenState extends State<LoginScreen> {
                               child: Form(
                                 key: _formKey,
                                 child: Column(
-                                children: [
-                                  TextFormField(
-                                    controller: _email,
-                                    keyboardType: TextInputType.emailAddress,
-                                    decoration: const InputDecoration(
-                                      hintText: 'Email address',
-                                      hintStyle: TextStyle(
-                                        color: Colors.black38,
-                                        fontSize: 14,
-                                      ),
-                                      prefixIcon: Icon(
-                                        Icons.mail_outline,
-                                        color: Color(0xFFF8AE2B),
-                                        size: 25,
-                                      ),
-                                      border: InputBorder.none,
-                                      contentPadding: EdgeInsets.symmetric(
-                                        vertical: 16,
-                                      ),
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.trim().isEmpty) {
-                                        return 'Email is required';
-                                      }
-                                      if (!emailRegex.hasMatch(value.trim())) {
-                                        return 'Enter a valid email';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  Divider(height: 1, color: Colors.grey[200]),
-                                  TextFormField(
-                                    controller: _password,
-                                    obscureText: _obscurePassword,
-                                    decoration: InputDecoration(
-                                      hintText: 'Password',
-                                      hintStyle: TextStyle(
-                                        color: Colors.black38,
-                                        fontSize: 14,
-                                      ),
-                                      prefixIcon: const Icon(
-                                        Icons.lock_outline,
-                                        color: Color(0xFFF8AE2B),
-                                        size: 25,
-                                      ),
-                                      suffixIcon: IconButton(
-                                        icon: Icon(
-                                          _obscurePassword
-                                              ? Icons.visibility_off
-                                              : Icons.visibility,
-                                          color: Colors.grey,
+                                  children: [
+                                    TextFormField(
+                                      controller: _email,
+                                      keyboardType: TextInputType.emailAddress,
+                                      decoration: const InputDecoration(
+                                        hintText: 'Email address',
+                                        hintStyle: TextStyle(
+                                          color: Colors.black38,
+                                          fontSize: 14,
                                         ),
-                                        onPressed: () {
-                                          setState(() {
-                                            _obscurePassword =
-                                                !_obscurePassword;
-                                          });
-                                        },
+                                        prefixIcon: Icon(
+                                          Icons.mail_outline,
+                                          color: Color(0xFFF8AE2B),
+                                          size: 25,
+                                        ),
+                                        border: InputBorder.none,
+                                        contentPadding: EdgeInsets.symmetric(
+                                          vertical: 16,
+                                        ),
                                       ),
-                                      border: InputBorder.none,
-                                      contentPadding:
-                                          const EdgeInsets.symmetric(
-                                            vertical: 16,
-                                          ),
+                                      validator: (value) {
+                                        if (value == null ||
+                                            value.trim().isEmpty) {
+                                          return 'Email is required';
+                                        }
+                                        if (!emailRegex.hasMatch(
+                                          value.trim(),
+                                        )) {
+                                          return 'Enter a valid email';
+                                        }
+                                        return null;
+                                      },
                                     ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Password is required';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                ],
-                              ),
+                                    Divider(height: 1, color: Colors.grey[200]),
+                                    TextFormField(
+                                      controller: _password,
+                                      obscureText: _obscurePassword,
+                                      decoration: InputDecoration(
+                                        hintText: 'Password',
+                                        hintStyle: TextStyle(
+                                          color: Colors.black38,
+                                          fontSize: 14,
+                                        ),
+                                        prefixIcon: const Icon(
+                                          Icons.lock_outline,
+                                          color: Color(0xFFF8AE2B),
+                                          size: 25,
+                                        ),
+                                        suffixIcon: IconButton(
+                                          icon: Icon(
+                                            _obscurePassword
+                                                ? Icons.visibility_off
+                                                : Icons.visibility,
+                                            color: Colors.grey,
+                                          ),
+                                          onPressed: () {
+                                            setState(() {
+                                              _obscurePassword =
+                                                  !_obscurePassword;
+                                            });
+                                          },
+                                        ),
+                                        border: InputBorder.none,
+                                        contentPadding:
+                                            const EdgeInsets.symmetric(
+                                              vertical: 16,
+                                            ),
+                                      ),
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Password is required';
+                                        }
+                                        return null;
+                                      },
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -272,19 +275,20 @@ class _LoginScreenState extends State<LoginScreen> {
                                         ),
                                       )
                                     : const Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      'Log In',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Text(
+                                            'Log In',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          SizedBox(width: 8),
+                                          Icon(Icons.arrow_forward, size: 20),
+                                        ],
                                       ),
-                                    ),
-                                    SizedBox(width: 8),
-                                    Icon(Icons.arrow_forward, size: 20),
-                                  ],
-                                ),
                               ),
                             ),
                           ],

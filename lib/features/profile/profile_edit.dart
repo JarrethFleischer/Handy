@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:handy/features/leaderboard/leaderboard_controller.dart';
+import 'package:handy/services/auth_service.dart';
+import 'package:handy/theme/app_colors.dart';
 
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
@@ -10,10 +13,50 @@ class EditProfileView extends StatefulWidget {
 }
 
 class _EditProfileViewState extends State<EditProfileView> {
-  final _username = TextEditingController(text: 'Danish Syazwi');
+  final _controller = LeaderboardController();
+  final _username = TextEditingController();
   final _phone = TextEditingController(text: '(+60) 19 848 7025');
-  final _email = TextEditingController(text: 'danish25122004@gmail.com');
+  final _email = TextEditingController();
   final _bio = TextEditingController(text: 'Kongkek For Jarreth LIFE!!');
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  bool _saving = false;
+
+  Future<void> _save() async {
+    FocusScope.of(context).unfocus();
+    setState(() => _saving = true);
+    try {
+      await AuthService.updateUser(
+        name: _username.text.trim(),
+        email: _email.text.trim(),
+      );
+      if (!mounted) return;
+      Navigator.pop(context);
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _load() async {
+    try {
+      final userId = AuthService.currentUserId;
+      if (userId == null) return;
+      final profile = await _controller.fetchCurrentUser(userId);
+      if (!mounted) return;
+      _username.text = profile.userName;
+      _email.text = profile.userUsername;
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -79,13 +122,13 @@ class _EditProfileViewState extends State<EditProfileView> {
             left: 0,
             right: 0,
             child: Container(
-              height: 240,
+              height: 200,
               decoration: BoxDecoration(
-                color: const Color(0xFF9AD5FF),
+                color: AppColors.blueLight,
                 borderRadius: BorderRadius.vertical(
                   bottom: Radius.elliptical(
                     MediaQuery.of(context).size.width,
-                    120,
+                    150,
                   ),
                 ),
               ),
@@ -158,22 +201,6 @@ class _EditProfileViewState extends State<EditProfileView> {
                             ),
                           ),
                         ),
-                        // Tiny floating camera icon
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFFFFD465,
-                            ), // Yellow from your theme
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.black, width: 1),
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            color: Colors.black87,
-                            size: 20,
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 32),
@@ -183,11 +210,6 @@ class _EditProfileViewState extends State<EditProfileView> {
                       'Username',
                       Icons.person_outline,
                       _username,
-                    ),
-                    _buildTextField(
-                      'Phone Number',
-                      Icons.phone_outlined,
-                      _phone,
                     ),
                     _buildTextField(
                       'Email Address',
@@ -216,12 +238,9 @@ class _EditProfileViewState extends State<EditProfileView> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        onPressed: () {
-                          FocusScope.of(context).unfocus();
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
-                          'Save Changes',
+                        onPressed: _saving ? null : _save,
+                        child: Text(
+                          _saving ? 'Saving...' : 'Save Changes',
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 18,

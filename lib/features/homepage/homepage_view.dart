@@ -1,11 +1,16 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:handy/features/chapters/chapter 1/chapter1_view.dart';
 import 'package:handy/features/chapters/chapter_controller.dart';
+import 'package:handy/features/leaderboard/leaderboard_controller.dart';
+import 'package:handy/services/auth_service.dart';
 import 'package:handy/theme/app_colors.dart';
 import 'package:handy/theme/shimmer_text.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomepageView extends StatefulWidget {
-  const HomepageView({super.key});
+  const HomepageView({required this.isActive, super.key});
+
+  final bool isActive;
 
   static const _body = TextStyle(
     fontFamily: 'Inter',
@@ -49,9 +54,13 @@ class HomepageView extends StatefulWidget {
 
 class _HomepageViewState extends State<HomepageView> {
   final _chapterController = ChapterController();
+  final _userController = LeaderboardController();
   final Set<int> _expandedChapterIds = {};
 
   List<Chapter> _chapters = [];
+  Map<String, double> _lessonScores = {};
+  int _userXP = 0;
+  int _userStreakCount = 0;
   bool _isLoading = true;
   bool _didStartLoading = false;
   String? _error;
@@ -66,6 +75,34 @@ class _HomepageViewState extends State<HomepageView> {
     _loadHomepage();
   }
 
+  @override
+  void didUpdateWidget(HomepageView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      _refreshLessonScores();
+      _refreshUser();
+    }
+  }
+
+  Future<void> _refreshUser() async {
+    final userId = AuthService.currentUserId;
+    if (userId == null) return;
+    try {
+      final profile = await _userController.fetchCurrentUser(userId);
+      if (!mounted) return;
+      setState(() {
+        _userXP = profile.userXP;
+        _userStreakCount = profile.userStreakCount;
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _refreshLessonScores() async {
+    final scores = await _readLessonScores();
+    if (!mounted) return;
+    setState(() => _lessonScores = scores);
+  }
+
   Future<void> _loadHomepage() async {
     setState(() {
       _isLoading = true;
@@ -74,6 +111,13 @@ class _HomepageViewState extends State<HomepageView> {
 
     try {
       final chapters = await _chapterController.fetchChapters();
+      CurrentUserProfile? profile;
+      final userId = AuthService.currentUserId;
+      if (userId != null) {
+        try {
+          profile = await _userController.fetchCurrentUser(userId);
+        } catch (_) {}
+      }
       if (!mounted) return;
       await Future.wait([
         precacheImage(
@@ -84,8 +128,13 @@ class _HomepageViewState extends State<HomepageView> {
         precacheImage(const AssetImage('assets/images/streak.png'), context),
       ]);
       if (!mounted) return;
+      final completed = await _readLessonScores();
+      if (!mounted) return;
       setState(() {
         _chapters = chapters;
+        _lessonScores = completed;
+        _userXP = profile?.userXP ?? 0;
+        _userStreakCount = profile?.userStreakCount ?? 0;
         _isLoading = false;
       });
     } catch (_) {
@@ -167,16 +216,16 @@ class _HomepageViewState extends State<HomepageView> {
                         Row(
                           children: [
                             Image.asset(
-                              'assets/images/coin.png',
+                              'assets/images/trophy.png',
                               width: 20,
                               height: 20,
                             ),
                             const SizedBox(width: 4),
-                            const Text(
-                              '0',
-                              style: TextStyle(
+                            Text(
+                              '$_userXP',
+                              style: const TextStyle(
                                 color: Color(0xFF14304A),
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 fontSize: 16,
                               ),
                             ),
@@ -188,11 +237,11 @@ class _HomepageViewState extends State<HomepageView> {
                               height: 20,
                             ),
                             const SizedBox(width: 4),
-                            const Text(
-                              '3',
-                              style: TextStyle(
+                            Text(
+                              '$_userStreakCount',
+                              style: const TextStyle(
                                 color: Color(0xFFFA6C5E),
-                                fontWeight: FontWeight.bold,
+                                fontWeight: FontWeight.w600,
                                 fontSize: 16,
                               ),
                             ),
@@ -215,7 +264,9 @@ class _HomepageViewState extends State<HomepageView> {
                       ),
                     )
                   else
-                    ..._chapters.map(_buildChapter),
+                    ..._chapters.asMap().entries.map(
+                      (entry) => _buildChapter(entry.value, entry.key),
+                    ),
                 ],
               ),
             ),
@@ -225,10 +276,71 @@ class _HomepageViewState extends State<HomepageView> {
     );
   }
 
-  Widget _buildChapter(Chapter chapter) {
+  String _lessonKey(int chapterId, int lessonNo) {
+    final userId = AuthService.currentUserId ?? 0;
+    return '$userId:$chapterId:$lessonNo';
+  }
+
+  Future<Map<String, double>> _readLessonScores() async {
+    final prefs = await SharedPreferences.getInstance();
+    final saved = prefs.getStringList('lesson_scores') ?? [];
+    final scores = <String, double>{};
+    for (final item in saved) {
+      final split = item.split('=');
+      if (split.length == 2) {
+        scores[split[0]] = double.tryParse(split[1]) ?? 0;
+      }
+    }
+    return scores;
+  }
+
+  Future<void> _saveLessonScore(
+    int chapterId,
+    int lessonNo,
+    double score,
+  ) async {
+    final key = _lessonKey(chapterId, lessonNo);
+    final previous = _lessonScores[key] ?? 0;
+    final best = score > previous ? score : previous;
+    final scores = {..._lessonScores, key: best};
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+      'lesson_scores',
+      scores.entries.map((entry) => '${entry.key}=${entry.value}').toList(),
+    );
+    if (!mounted) return;
+    setState(() => _lessonScores = scores);
+  }
+
+  double _score(int chapterId, int lessonNo) {
+    return _lessonScores[_lessonKey(chapterId, lessonNo)] ?? 0;
+  }
+
+  bool _chapterOpen(int index) {
+    final chapter = _chapters[index];
+    if (!chapter.isUnlocked) return false;
+    if (index == 0) return true;
+    final previous = _chapters[index - 1];
+    final lessons = previous.chapterStory.chapterContent;
+    if (lessons.isEmpty) return true;
+    return lessons.every(
+      (lesson) => _score(previous.chapterID, lesson.lessonNo) > 0,
+    );
+  }
+
+  Widget _buildChapter(Chapter chapter, int index) {
     final lessons = chapter.chapterStory.chapterContent;
+    final completed = lessons
+        .where(
+          (lesson) =>
+              (_lessonScores[_lessonKey(chapter.chapterID, lesson.lessonNo)] ??
+                  0) >
+              0,
+        )
+        .length;
+    final progressValue = lessons.isEmpty ? 0.0 : completed / lessons.length;
     final expanded = _expandedChapterIds.contains(chapter.chapterID);
-    final unlocked = chapter.isUnlocked;
+    final unlocked = _chapterOpen(index);
 
     return Column(
       children: [
@@ -238,9 +350,9 @@ class _HomepageViewState extends State<HomepageView> {
             opacity: unlocked ? 1 : 0.55,
             child: _ChapterCard(
               label: chapter.chapterStory.chapterTitle,
-              title: chapter.chapterStory.chapterTitle,
-              progress: '${lessons.length} lessons',
-              progressValue: 0,
+              title: chapter.chapterStory.chapterDesc,
+              progress: '$completed of ${lessons.length} lessons completed',
+              progressValue: progressValue,
               icon: unlocked ? Icons.play_circle : Icons.lock,
               iconColor: AppColors.blueLight,
               isLoading: _isLoading,
@@ -270,18 +382,50 @@ class _HomepageViewState extends State<HomepageView> {
               ),
               for (var i = 0; i < lessons.length; i++) ...[
                 if (i > 0) const _LessonSpacer(),
-                _LessonCard(
-                  title: lessons[i].lessonDesc,
-                  subtitle: 'Lesson ${lessons[i].lessonNo}',
-                  icon: Icons.play_circle,
-                  iconColor: AppColors.blueLight,
-                  isLoading: _isLoading,
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => Chapter1View(lesson: lessons[i]),
-                      ),
+                Builder(
+                  builder: (context) {
+                    final lesson = lessons[i];
+                    final score = _score(chapter.chapterID, lesson.lessonNo);
+                    final lessonOpen =
+                        i == 0 ||
+                        _score(chapter.chapterID, lessons[i - 1].lessonNo) > 0;
+                    return _LessonCard(
+                      title: lesson.lessonTitle,
+                      subtitle: lesson.lessonDesc,
+                      icon: lessonOpen ? Icons.play_circle : Icons.lock,
+                      iconColor: AppColors.blueLight,
+                      isLoading: _isLoading,
+                      progressValue: score,
+                      onTap: lessonOpen
+                          ? () async {
+                              final earned = await Navigator.push<double>(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => Chapter1View(
+                                    lesson: lesson,
+                                    awardsXp: score < 1,
+                                  ),
+                                ),
+                              );
+                              if (earned != null) {
+                                await _saveLessonScore(
+                                  chapter.chapterID,
+                                  lesson.lessonNo,
+                                  earned,
+                                );
+                                final userId = AuthService.currentUserId;
+                                if (userId != null) {
+                                  try {
+                                    final profile = await _userController
+                                        .fetchCurrentUser(userId);
+                                    if (mounted) {
+                                      setState(() => _userXP = profile.userXP);
+                                    }
+                                  } catch (_) {}
+                                }
+                              }
+                            }
+                          : null,
                     );
                   },
                 ),

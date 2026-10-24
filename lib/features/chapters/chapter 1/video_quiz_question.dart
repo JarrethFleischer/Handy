@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/chapters/chapter 1/learn_sign_question.dart';
+import 'package:handy/features/chapters/chapter 1/lesson_flow.dart';
 import 'package:handy/features/widget/sound.dart';
 import 'package:handy/theme/app_colors.dart';
 
 class VideoQuizQuestion extends StatefulWidget {
   const VideoQuizQuestion({
-    required this.videoAsset,
     required this.options,
     required this.correctAnswer,
     required this.onContinue,
+    this.videoAsset,
+    this.videoUrl,
+    this.title = 'What sign is shown?',
     super.key,
   });
 
-  final String videoAsset;
+  final String? videoAsset;
+  final String? videoUrl;
+  final String title;
   final List<String> options;
   final String correctAnswer;
-  final VoidCallback onContinue;
+  final LessonContinue onContinue;
 
   @override
   State<VideoQuizQuestion> createState() => _VideoQuizQuestionState();
@@ -24,6 +29,7 @@ class VideoQuizQuestion extends StatefulWidget {
 class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
   String? _selectedAnswer;
   bool _hasSubmitted = false;
+  bool _missed = false;
 
   bool get _isCorrect => _selectedAnswer == widget.correctAnswer;
 
@@ -37,6 +43,7 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
         playCorrectSound();
       } else {
         playIncorrectSound();
+        _missed = true;
       }
       setState(() {
         _hasSubmitted = true;
@@ -45,7 +52,7 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
     }
 
     if (_isCorrect) {
-      widget.onContinue();
+      widget.onContinue(!_missed, awardsPoints: true);
     } else {
       setState(() {
         _selectedAnswer = null;
@@ -58,11 +65,12 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
           child: Text(
-            'What sign is shown?',
-            style: TextStyle(
+            widget.title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
               fontFamily: 'Inter',
               color: AppColors.textDark,
               fontSize: 20,
@@ -74,8 +82,9 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
           padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 20),
           child: ClipRRect(
             child: LessonVideo(
-              key: ValueKey(widget.videoAsset),
-              assetPath: widget.videoAsset,
+              key: ValueKey(widget.videoUrl ?? widget.videoAsset),
+              assetPath: widget.videoUrl == null ? widget.videoAsset : null,
+              videoUrl: widget.videoUrl,
             ),
           ),
         ),
@@ -87,7 +96,7 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
             icon: Icons.check_circle,
             title: 'Correct!',
             buttonLabel: 'Next question',
-            onPressed: widget.onContinue,
+            onPressed: () => widget.onContinue(!_missed, awardsPoints: true),
           )
         else if (_hasSubmitted)
           _AnswerSheet(
@@ -95,7 +104,7 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
             icon: Icons.cancel,
             title: 'Incorrect',
             buttonLabel: 'Continue',
-            onPressed: widget.onContinue,
+            onPressed: () => widget.onContinue(false, awardsPoints: true),
           )
         else
           LessonButton(
