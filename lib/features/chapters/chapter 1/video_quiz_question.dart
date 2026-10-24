@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/chapters/chapter 1/learn_sign_question.dart';
+<<<<<<< Updated upstream
 import 'package:handy/theme/app_colors.dart';
+=======
+import 'package:handy/features/chapters/chapter 1/lesson_flow.dart';
+import 'package:handy/features/widget/sound.dart';
+>>>>>>> Stashed changes
 
 class VideoQuizQuestion extends StatefulWidget {
   const VideoQuizQuestion({
@@ -52,42 +57,74 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+<<<<<<< Updated upstream
         const Padding(
           padding: EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
+=======
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(0, 14, 0, 0),
+>>>>>>> Stashed changes
           child: Text(
             'What sign is shown?',
             style: TextStyle(
               fontFamily: 'Inter',
-              color: AppColors.textDark,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+              color: Color(0xFF14181B),
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.4,
             ),
           ),
         ),
+        // Flat video card (no chunky offset shadow)
         Padding(
+<<<<<<< Updated upstream
           padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 20),
           child: ClipRRect(
             child: LessonVideo(
               key: ValueKey(widget.videoAsset),
               assetPath: widget.videoAsset,
+=======
+          padding: const EdgeInsetsDirectional.fromSTEB(20, 12, 20, 16),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF14181B), width: 1.8),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: LessonVideo(
+                key: ValueKey(widget.videoUrl ?? widget.videoAsset),
+                assetPath: widget.videoUrl == null ? widget.videoAsset : null,
+                videoUrl: widget.videoUrl,
+                height: 190,
+              ),
             ),
           ),
         ),
-        ...widget.options.map(_buildOption),
-        const Spacer(),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: widget.options.map(_buildOption).toList(),
+>>>>>>> Stashed changes
+            ),
+          ),
+        ),
         if (_hasSubmitted && _isCorrect)
           _AnswerSheet(
-            color: AppColors.correct,
-            icon: Icons.check_circle,
+            color: const Color(0xFF00E676),
+            icon: Icons.check_circle_rounded,
             title: 'Correct!',
             buttonLabel: 'Next question',
             onPressed: widget.onContinue,
           )
         else if (_hasSubmitted)
           _AnswerSheet(
-            color: AppColors.incorrect,
-            icon: Icons.cancel,
+            color: const Color(0xFFFF5252),
+            icon: Icons.cancel_rounded,
             title: 'Incorrect',
+            answerLabel: 'Correct answer:',
+            answer: widget.correctAnswer,
             buttonLabel: 'Continue',
             onPressed: widget.onContinue,
           )
@@ -104,19 +141,15 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
     final isSelected = option == _selectedAnswer;
     final isCorrectOption = option == widget.correctAnswer;
 
-    Color borderColor = AppColors.blueLight;
     Color backgroundColor = Colors.white;
 
     if (!_hasSubmitted && isSelected) {
-      borderColor = AppColors.blueDark;
-      backgroundColor = AppColors.blueDark.withValues(alpha: 0.06);
+      backgroundColor = const Color(0xFFE0F7FF);
     } else if (_hasSubmitted) {
       if (isCorrectOption && isSelected) {
-        borderColor = AppColors.correct;
-        backgroundColor = AppColors.correct.withValues(alpha: 0.18);
+        backgroundColor = const Color(0xFF00E676).withValues(alpha: 0.2);
       } else if (isSelected) {
-        borderColor = AppColors.incorrect;
-        backgroundColor = AppColors.incorrect.withValues(alpha: 0.12);
+        backgroundColor = const Color(0xFFFF5252).withValues(alpha: 0.15);
       }
     }
 
@@ -124,9 +157,9 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
       padding: const EdgeInsets.only(bottom: 10, left: 20, right: 20),
       child: Material(
         color: backgroundColor,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(14),
         child: InkWell(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(14),
           onTap: _hasSubmitted
               ? null
               : () {
@@ -134,13 +167,22 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
                     _selectedAnswer = option;
                   });
                 },
+          // Interactive Button Style: Solid border with chunky bottom shadow
           child: Container(
             width: double.infinity,
             constraints: const BoxConstraints(minHeight: 52),
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              border: Border.all(color: borderColor, width: 2),
-              borderRadius: BorderRadius.circular(10),
+              color: backgroundColor,
+              border: Border.all(color: const Color(0xFF14181B), width: 1.8),
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0xFF14181B),
+                  offset: Offset(0, 4),
+                  blurRadius: 0,
+                ),
+              ],
             ),
             child: Row(
               children: [
@@ -150,9 +192,9 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
                       option,
                       style: const TextStyle(
                         fontFamily: 'Inter',
-                        color: AppColors.textDark,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w400,
+                        color: Color(0xFF14181B), // Explicit dark ink text
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
                       ),
                     ),
                   ),
@@ -173,8 +215,12 @@ class _AnswerSheet extends StatelessWidget {
     required this.title,
     required this.buttonLabel,
     required this.onPressed,
+    this.answerLabel,
+    this.answer,
   });
 
+  final String? answerLabel;
+  final String? answer;
   final Color color;
   final IconData icon;
   final String title;
@@ -189,44 +235,78 @@ class _AnswerSheet extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomInset),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        border: const Border(
+          top: BorderSide(color: Color(0xFF14181B), width: 2.0),
+          left: BorderSide(color: Color(0xFF14181B), width: 2.0),
+          right: BorderSide(color: Color(0xFF14181B), width: 2.0),
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xFF14181B),
+            offset: Offset(0, -4),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Icon(icon, color: color, size: 22),
+              Icon(icon, color: color, size: 24),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: TextStyle(
                   fontFamily: 'Inter',
                   color: color,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
             ],
           ),
+          if (answer != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              answerLabel ?? 'Correct answer:',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                color: color,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              answer!,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                color: Color(0xFF14181B),
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
           SizedBox(
-            height: 48,
+            height: 50,
             width: double.infinity,
             child: ElevatedButton(
               onPressed: onPressed,
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 backgroundColor: color,
-                foregroundColor: AppColors.white,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                textStyle: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  borderRadius: BorderRadius.circular(14),
+                  side: BorderSide(
+                    color: const Color(0xFF14181B),
+                    width: 1.8,
+                  ),
                 ),
               ),
               child: Text(buttonLabel),
