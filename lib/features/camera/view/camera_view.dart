@@ -28,11 +28,16 @@ class CameraView extends StatefulWidget {
     this.purpose = CameraPurpose.collectSamples,
     this.expectedSign,
     this.xpReward = 100,
+    this.onReady,
   });
 
   final CameraPurpose purpose;
   final String? expectedSign;
   final int xpReward;
+
+  /// Optional. Called once when the camera preview is ready (or failed and is
+  /// showing its error), so a loading screen on top can be hidden.
+  final VoidCallback? onReady;
 
   @override
   State<CameraView> createState() => _CameraViewState();
@@ -138,6 +143,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           _isInitializing = false;
           _errorMessage = 'No cameras were found on this device.';
         });
+        _notifyReady();
         return;
       }
 
@@ -607,6 +613,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         _isInitializing = false;
         _errorMessage = null;
       });
+      _notifyReady();
     } on CameraException catch (error) {
       await _stopAndDispose(controller);
       _showError(_messageForCameraException(error));
@@ -693,6 +700,15 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       _isInitializing = false;
       _errorMessage = message;
     });
+    _notifyReady();
+  }
+
+  bool _readyNotified = false;
+
+  void _notifyReady() {
+    if (_readyNotified) return;
+    _readyNotified = true;
+    widget.onReady?.call();
   }
 
   String _messageForCameraException(CameraException error) {

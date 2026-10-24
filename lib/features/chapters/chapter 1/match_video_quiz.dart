@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:handy/features/chapters/chapter 1/learn_sign_question.dart';
 import 'package:handy/features/chapters/chapter 1/lesson_flow.dart';
 import 'package:handy/features/widget/sound.dart';
-import 'package:handy/theme/app_colors.dart';
 
 class VideoMatchPair {
   const VideoMatchPair({required this.label, this.videoAsset, this.videoUrl});
@@ -127,39 +126,50 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
     return Column(
       children: [
         const Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(0, 20, 0, 10),
+          padding: EdgeInsetsDirectional.fromSTEB(0, 16, 0, 10),
           child: Text(
             'Match the pairs',
             style: TextStyle(
               fontFamily: 'Inter',
-              color: AppColors.textDark,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+              color: Color(0xFF14181B),
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.4,
             ),
           ),
         ),
         Expanded(
           child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Column(
               children: [
-                ClipRRect(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 250),
-                    child: LessonVideo(
-                      key: ValueKey(
-                        currentPair.videoUrl ?? currentPair.videoAsset,
+                // Flat video container (no chunky offset shadow)
+                Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0xFF14181B), width: 1.8),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(18),
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 250),
+                      child: LessonVideo(
+                        key: ValueKey(
+                          currentPair.videoUrl ?? currentPair.videoAsset,
+                        ),
+                        assetPath: currentPair.videoUrl == null
+                            ? currentPair.videoAsset
+                            : null,
+                        videoUrl: currentPair.videoUrl,
+                        height: 190,
                       ),
-                      assetPath: currentPair.videoUrl == null
-                          ? currentPair.videoAsset
-                          : null,
-                      videoUrl: currentPair.videoUrl,
-                      height: 210,
                     ),
                   ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 _buildVideoNavigation(),
-                const SizedBox(height: 10),
+                const SizedBox(height: 14),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -168,25 +178,19 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
                         children: List.generate(
                           widget.pairs.length,
                           (index) => Padding(
-                            padding: const EdgeInsets.only(
-                              bottom: 10,
-                              left: 20,
-                            ),
+                            padding: const EdgeInsets.only(bottom: 10),
                             child: _buildAnswerSlot(index),
                           ),
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
+                    const SizedBox(width: 14),
                     Expanded(
                       child: Column(
                         children: _wordChoices
                             .map(
                               (word) => Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: 10,
-                                  right: 20,
-                                ),
+                                padding: const EdgeInsets.only(bottom: 10),
                                 child: _buildWordChoice(word),
                               ),
                             )
@@ -212,17 +216,22 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
           },
           child: _hasSubmitted && _allCorrect
               ? _AnswerSheet(
-                  color: AppColors.correct,
-                  icon: Icons.check_circle,
+                  color: const Color(0xFF00E676),
+                  icon: Icons.check_circle_rounded,
                   title: 'Correct!',
                   buttonLabel: 'Continue',
                   onPressed: () => widget.onContinue(!_missed, awardsPoints: true),
                 )
               : _hasSubmitted
               ? _AnswerSheet(
-                  color: AppColors.incorrect,
-                  icon: Icons.cancel,
+                  color: const Color(0xFFFF5252),
+                  icon: Icons.cancel_rounded,
                   title: 'Incorrect',
+                  answerLabel: 'Correct answers:',
+                  answer: [
+                    for (var i = 0; i < widget.pairs.length; i++)
+                      'Video ${i + 1}  →  ${widget.pairs[i].label}',
+                  ].join('\n'),
                   buttonLabel: 'Continue',
                   onPressed: () => widget.onContinue(false, awardsPoints: true),
                 )
@@ -244,26 +253,37 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
           onPressed: _currentVideoIndex > 0
               ? () => _showVideo(_currentVideoIndex - 1)
               : null,
-          icon: const Icon(Icons.chevron_left),
+          icon: const Icon(Icons.chevron_left_rounded, color: Color(0xFF14181B)),
         ),
         ...List.generate(
           widget.pairs.length,
           (index) => Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 3),
+            padding: const EdgeInsets.symmetric(horizontal: 4),
             child: InkWell(
               borderRadius: BorderRadius.circular(20),
               onTap: () => _showVideo(index),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                width: 18,
-                height: 18,
-                padding: const EdgeInsets.all(8),
+                width: 22,
+                height: 22,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
                   color: _currentVideoIndex == index
-                      ? AppColors.blueDark
-                      : const Color(0xFFE2E8EA),
+                      ? const Color(0xFF14181B)
+                      : const Color(0xFFE2E8F0),
                   borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFF14181B), width: 1.2),
+                ),
+                child: Text(
+                  '${index + 1}',
+                  style: TextStyle(
+                    fontFamily: 'Inter',
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: _currentVideoIndex == index
+                        ? Colors.white
+                        : const Color(0xFF57636C),
+                  ),
                 ),
               ),
             ),
@@ -273,7 +293,7 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
           onPressed: _currentVideoIndex < widget.pairs.length - 1
               ? () => _showVideo(_currentVideoIndex + 1)
               : null,
-          icon: const Icon(Icons.chevron_right),
+          icon: const Icon(Icons.chevron_right_rounded, color: Color(0xFF14181B)),
         ),
       ],
     );
@@ -285,50 +305,51 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
     final isWrong = _hasSubmitted && answer != widget.pairs[index].label;
 
     return InkWell(
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(12),
       onTap: () => _removeAnswer(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        height: 58,
-        padding: const EdgeInsets.symmetric(horizontal: 10),
+        height: 52,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
           color: answer == null
-              ? AppColors.gray
+              ? Colors.white
               : isCorrect
-              ? AppColors.correct.withValues(alpha: 0.18)
+              ? const Color(0xFF00E676).withValues(alpha: 0.18)
               : isWrong
-              ? AppColors.incorrect.withValues(alpha: 0.12)
-              : const Color(0xFFE8F5F3),
-          borderRadius: BorderRadius.circular(10),
+              ? const Color(0xFFFF5252).withValues(alpha: 0.15)
+              : const Color(0xFFE0F7FF),
+          borderRadius: BorderRadius.circular(12),
+          // Flat borders for answer slots (buttons get chunky shadows, slots stay clean)
           border: Border.all(
             color: isCorrect
-                ? AppColors.correct
+                ? const Color(0xFF00E676)
                 : isWrong
-                ? AppColors.incorrect
-                : answer == null
-                ? AppColors.gray
-                : AppColors.correct,
-            width: _hasSubmitted || answer != null ? 2 : 1,
+                ? const Color(0xFFFF5252)
+                : const Color(0xFF14181B),
+            width: 1.6,
           ),
         ),
         child: Row(
           children: [
             Expanded(
               child: Text(
-                answer ?? '',
+                answer ?? 'Drop slot',
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontFamily: 'Inter',
-                  color: AppColors.textDark,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  color: answer == null
+                      ? const Color(0xFF94A3B8)
+                      : const Color(0xFF14181B),
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
             ),
             if (answer != null && !_hasSubmitted)
-              const Icon(Icons.close, color: AppColors.gray, size: 17),
+              const Icon(Icons.close_rounded, color: Color(0xFF14181B), size: 16),
           ],
         ),
       ),
@@ -343,18 +364,27 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
       opacity: isUsed ? 0.4 : 1,
       child: Material(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         child: InkWell(
           onTap: _hasSubmitted || isUsed ? null : () => _chooseWord(word),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
+          // Interactive button card style with chunky shadow
           child: Container(
             width: double.infinity,
-            height: 58,
+            height: 52,
             alignment: Alignment.center,
             padding: const EdgeInsets.symmetric(horizontal: 8),
             decoration: BoxDecoration(
-              border: Border.all(color: AppColors.grayLight),
-              borderRadius: BorderRadius.circular(10),
+              color: Colors.white,
+              border: Border.all(color: const Color(0xFF14181B), width: 1.8),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0xFF14181B),
+                  offset: Offset(0, 4),
+                  blurRadius: 0,
+                ),
+              ],
             ),
             child: Text(
               word,
@@ -364,8 +394,8 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
               style: const TextStyle(
                 fontFamily: 'Inter',
                 color: Color(0xFF14181B),
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
+                fontSize: 13,
+                fontWeight: FontWeight.w800,
               ),
             ),
           ),
@@ -382,8 +412,12 @@ class _AnswerSheet extends StatelessWidget {
     required this.title,
     required this.buttonLabel,
     required this.onPressed,
+    this.answerLabel,
+    this.answer,
   });
 
+  final String? answerLabel;
+  final String? answer;
   final Color color;
   final IconData icon;
   final String title;
@@ -398,44 +432,79 @@ class _AnswerSheet extends StatelessWidget {
       width: double.infinity,
       padding: EdgeInsets.fromLTRB(20, 16, 20, 16 + bottomInset),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.14),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        color: Colors.white,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+        border: const Border(
+          top: BorderSide(color: Color(0xFF14181B), width: 2.0),
+          left: BorderSide(color: Color(0xFF14181B), width: 2.0),
+          right: BorderSide(color: Color(0xFF14181B), width: 2.0),
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0xFF14181B),
+            offset: Offset(0, -4),
+            blurRadius: 0,
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Row(
             children: [
-              Icon(icon, color: color, size: 22),
+              Icon(icon, color: color, size: 24),
               const SizedBox(width: 8),
               Text(
                 title,
                 style: TextStyle(
                   fontFamily: 'Inter',
                   color: color,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
+                  fontSize: 19,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
             ],
           ),
+          if (answer != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              answerLabel ?? 'Correct answer:',
+              style: TextStyle(
+                fontFamily: 'Inter',
+                color: color,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              answer!,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                color: Color(0xFF14181B),
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                height: 1.4,
+              ),
+            ),
+          ],
           const SizedBox(height: 14),
           SizedBox(
-            height: 48,
+            height: 50,
             width: double.infinity,
             child: ElevatedButton(
               onPressed: onPressed,
               style: ElevatedButton.styleFrom(
                 elevation: 0,
                 backgroundColor: color,
-                foregroundColor: AppColors.white,
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(28),
-                ),
-                textStyle: const TextStyle(
-                  fontFamily: 'Inter',
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
+                  borderRadius: BorderRadius.circular(14),
+                  side: const BorderSide(
+                    color: Color(0xFF14181B),
+                    width: 1.8,
+                  ),
                 ),
               ),
               child: Text(buttonLabel),
