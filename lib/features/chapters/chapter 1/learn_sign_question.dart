@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/chapters/chapter 1/lesson_flow.dart';
-import 'package:handy/theme/app_colors.dart';
 import 'package:video_player/video_player.dart';
 
 class LearnSignQuestion extends StatelessWidget {
@@ -22,43 +21,62 @@ class LearnSignQuestion extends StatelessWidget {
     return Column(
       children: [
         const Padding(
-          padding: EdgeInsetsDirectional.fromSTEB(0, 20, 0, 0),
+          padding: EdgeInsetsDirectional.fromSTEB(0, 16, 0, 0),
           child: Text(
             'Learn a new sign',
             style: TextStyle(
               fontFamily: 'Inter',
-              color: AppColors.textDark,
-              fontSize: 20,
-              fontWeight: FontWeight.w600,
+              color: Color(0xFF14181B),
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.4,
             ),
           ),
         ),
         Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(0, 10, 0, 20),
-          child: ClipRRect(
-            child: LessonVideo(
-              key: ValueKey(videoUrl ?? videoAsset),
-              assetPath: videoAsset,
-              videoUrl: videoUrl,
+          padding: const EdgeInsetsDirectional.fromSTEB(20, 14, 20, 18),
+          child: Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0xFF14181B), width: 2.0),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0xFF14181B),
+                  offset: Offset(0, 5),
+                  blurRadius: 0,
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: LessonVideo(
+                key: ValueKey(videoUrl ?? videoAsset),
+                assetPath: videoAsset,
+                videoUrl: videoUrl,
+              ),
             ),
           ),
         ),
+        // FIXED: Flat info box (No chunky bottom shadow, clean flat border)
         Container(
           width: double.infinity,
-          height: 50,
+          constraints: const BoxConstraints(minHeight: 54),
           margin: const EdgeInsets.symmetric(horizontal: 20.0),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            border: Border.all(color: AppColors.blueDark),
-            borderRadius: BorderRadius.circular(10),
+            color: Colors.white,
+            border: Border.all(color: const Color(0xFF14181B), width: 1.6),
+            borderRadius: BorderRadius.circular(14),
           ),
           child: Center(
             child: Text(
               sign,
               style: const TextStyle(
                 fontFamily: 'Inter',
-                color: AppColors.textDark,
+                color: Color(0xFF14181B),
                 fontSize: 18,
-                fontWeight: FontWeight.w400,
+                fontWeight: FontWeight.w900,
               ),
               textAlign: TextAlign.center,
             ),
@@ -84,19 +102,25 @@ class LessonButton extends StatelessWidget {
     return Padding(
       padding: EdgeInsets.fromLTRB(20, 0, 20, 16 + bottomInset),
       child: SizedBox(
-        height: 50,
+        height: 52,
         width: double.infinity,
         child: ElevatedButton(
           onPressed: onPressed,
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppColors.blueDark,
-            disabledBackgroundColor: AppColors.blueDark.withValues(alpha: 0.4),
+            backgroundColor: const Color(0xFF14181B),
+            disabledBackgroundColor: const Color(0xFFCBD5E1),
             foregroundColor: Colors.white,
+            disabledForegroundColor: const Color(0xFF64748B),
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(14),
+              side: const BorderSide(color: Color(0xFF14181B), width: 1.8),
             ),
-            textStyle: const TextStyle(fontFamily: 'Inter', fontSize: 16),
+            textStyle: const TextStyle(
+              fontFamily: 'Inter',
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
           ),
           child: Text(label),
         ),
@@ -109,7 +133,7 @@ class LessonVideo extends StatefulWidget {
   const LessonVideo({
     this.assetPath,
     this.videoUrl,
-    this.height = 220,
+    this.height = 210,
     super.key,
   });
 
@@ -175,14 +199,14 @@ class _LessonVideoState extends State<LessonVideo> {
     if (_hasError) {
       return _VideoState(
         height: widget.height,
-        child: Icon(Icons.error_outline, color: Colors.redAccent),
+        child: const Icon(Icons.error_outline, color: Colors.redAccent),
       );
     }
 
     if (!_controller.value.isInitialized) {
       return _VideoState(
         height: widget.height,
-        child: const CircularProgressIndicator(),
+        child: const CircularProgressIndicator(color: Color(0xFF22A2F2)),
       );
     }
 
@@ -207,10 +231,10 @@ class _LessonVideoState extends State<LessonVideo> {
             if (!_controller.value.isPlaying)
               const Center(
                 child: Icon(
-                  Icons.play_circle_fill,
+                  Icons.play_circle_fill_rounded,
                   color: Colors.white,
-                  size: 56,
-                  shadows: [Shadow(color: Colors.black54, blurRadius: 8)],
+                  size: 60,
+                  shadows: [Shadow(color: Colors.black45, blurRadius: 10)],
                 ),
               ),
           ],
@@ -232,7 +256,7 @@ class _VideoState extends StatelessWidget {
       width: double.infinity,
       height: height,
       child: ColoredBox(
-        color: Colors.black12,
+        color: const Color(0xFFE2E8F0),
         child: Center(child: child),
       ),
     );

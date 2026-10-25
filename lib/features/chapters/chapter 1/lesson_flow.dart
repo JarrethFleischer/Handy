@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:handy/services/auth_service.dart';
 import 'package:handy/features/widget/popup.dart';
-import 'package:handy/theme/app_colors.dart';
 
 typedef LessonContinue = void Function(bool correct, {bool awardsPoints});
 
@@ -72,6 +71,7 @@ class _LessonFlowState extends State<LessonFlow> {
   @override
   Widget build(BuildContext context) {
     final questionCount = widget.questions.length;
+
     if (_showComplete) {
       return _LessonCompletePage(
         correct: _correctCount,
@@ -81,90 +81,95 @@ class _LessonFlowState extends State<LessonFlow> {
         onTryAgain: _tryAgain,
       );
     }
-    if (questionCount == 0) {
-      return Scaffold(
-        backgroundColor: AppColors.grayLight,
-        body: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: IconButton(
-                onPressed: _confirmLeave,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                icon: const Icon(
-                  Icons.close,
-                  color: AppColors.textDark,
-                  size: 24,
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF3FAFF),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFDDF1FF), Color(0xFFF3FAFF)],
                 ),
+              ),
+              child: CustomPaint(
+                painter: _SubtleDotGridPainter(),
               ),
             ),
           ),
-        ),
-      );
-    }
-
-    return GestureDetector(
-      onTap: () {
-        FocusScope.of(context).unfocus();
-        FocusManager.instance.primaryFocus?.unfocus();
-      },
-      child: Scaffold(
-        backgroundColor: AppColors.grayLight,
-        body: SafeArea(
-          bottom: false,
-          child: Padding(
-            padding: EdgeInsets.zero,
+          SafeArea(
+            bottom: false,
             child: Column(
               children: [
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
                   child: Row(
                     children: [
-                      SizedBox(
-                        width: 48,
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: IconButton(
-                            onPressed: _confirmLeave,
-                            padding: EdgeInsets.zero,
-                            constraints: const BoxConstraints(),
-                            icon: const Icon(
-                              Icons.close,
-                              color: AppColors.textDark,
-                              size: 24,
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(0xFF14181B),
+                            width: 1.6,
+                          ),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0xFF14181B),
+                              offset: Offset(0, 3),
+                              blurRadius: 0,
                             ),
+                          ],
+                        ),
+                        child: IconButton(
+                          onPressed: _confirmLeave,
+                          padding: const EdgeInsets.all(8),
+                          constraints: const BoxConstraints(),
+                          icon: const Icon(
+                            Icons.close_rounded,
+                            color: Color(0xFF14181B),
+                            size: 20,
                           ),
                         ),
                       ),
+                      const SizedBox(width: 14),
                       Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Container(
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE2E8F0),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: const Color(0xFF14181B),
+                              width: 1.4,
+                            ),
+                          ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: LinearProgressIndicator(
-                              value: (_currentQuestion + 1) / questionCount,
-                              minHeight: 10,
-                              backgroundColor: AppColors.gray,
+                              value: questionCount == 0
+                                  ? 0
+                                  : (_currentQuestion + 1) / questionCount,
+                              backgroundColor: Colors.transparent,
                               valueColor: const AlwaysStoppedAnimation<Color>(
-                                AppColors.blueDark,
+                                Color(0xFFFFD86B),
                               ),
                             ),
                           ),
                         ),
                       ),
-                      SizedBox(
-                        width: 48,
-                        child: Text(
-                          '${_currentQuestion + 1}/$questionCount',
-                          textAlign: TextAlign.right,
-                          style: const TextStyle(
-                            fontFamily: 'Inter',
-                            color: AppColors.textDark,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w500,
-                          ),
+                      const SizedBox(width: 14),
+                      Text(
+                        '${_currentQuestion + 1}/$questionCount',
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(
+                          fontFamily: 'Inter',
+                          color: Color(0xFF14181B),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
                     ],
@@ -191,7 +196,7 @@ class _LessonFlowState extends State<LessonFlow> {
               ],
             ),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -220,160 +225,236 @@ class _LessonCompletePage extends StatelessWidget {
         : percent >= 50
         ? 'Nice work!'
         : 'Keep practicing!';
-    final headline = 'You earned $xpEarned Points';
+    final headline = 'You earned $xpEarned Points!';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF5FF),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 16),
-          child: Column(
-            children: [
-              const Text(
-                'Lesson Complete',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  color: AppColors.blueDark,
-                  fontSize: 26,
-                  fontWeight: FontWeight.w800,
+      backgroundColor: const Color(0xFFF3FAFF),
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFDDF1FF), Color(0xFFF3FAFF)],
                 ),
               ),
-              const SizedBox(height: 20),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.fromLTRB(20, 22, 20, 22),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(color: const Color(0xFFD7E8FF)),
-                ),
-                child: Column(
-                  children: [
-                    Text(
-                      '$percent%',
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        color: AppColors.correct,
-                        fontSize: 56,
-                        fontWeight: FontWeight.w800,
-                        height: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(20),
-                      child: LinearProgressIndicator(
-                        value: total == 0 ? 0 : correct / total,
-                        minHeight: 10,
-                        backgroundColor: const Color(0xFFE4E4E4),
-                        color: AppColors.correct,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.correct.withValues(alpha: 0.12),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.check_circle,
-                            color: AppColors.correct,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '$correct of $total correct',
-                            style: const TextStyle(
-                              fontFamily: 'Inter',
-                              color: AppColors.correct,
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      headline,
-                      style: const TextStyle(
-                        fontFamily: 'Inter',
-                        color: AppColors.blueDark,
-                        fontSize: 20,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ],
-                ),
+              child: CustomPaint(
+                painter: _SubtleDotGridPainter(),
               ),
-              const SizedBox(height: 16),
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFD7E8FF)),
-                ),
-                child: Text(
-                  note,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontFamily: 'Inter',
-                    color: Color(0xFF14304A),
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const Spacer(),
-              SizedBox(
-                width: double.infinity,
-                height: 52,
-                child: FilledButton(
-                  onPressed: onContinue,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: AppColors.blueDark,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(28),
-                    ),
-                  ),
-                  child: const Text(
-                    'Continue',
+            ),
+          ),
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+              child: Column(
+                children: [
+                  const Text(
+                    'Lesson Complete! 🎉',
                     style: TextStyle(
                       fontFamily: 'Inter',
-                      fontSize: 16,
-                      fontWeight: FontWeight.w700,
+                      color: Color(0xFF14181B),
+                      fontSize: 26,
+                      fontWeight: FontWeight.w900,
                     ),
                   ),
-                ),
-              ),
-              TextButton(
-                onPressed: onTryAgain,
-                child: const Text(
-                  'Try Again',
-                  style: TextStyle(
-                    fontFamily: 'Inter',
-                    color: Color(0xFF6B7280),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(height: 20),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: const Color(0xFF14181B),
+                        width: 2.0,
+                      ),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0xFF14181B),
+                          offset: Offset(0, 6),
+                          blurRadius: 0,
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      children: [
+                        Text(
+                          '$percent%',
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0xFF00E676),
+                            fontSize: 54,
+                            fontWeight: FontWeight.w900,
+                            height: 1,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          height: 14,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE2E8F0),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: const Color(0xFF14181B),
+                              width: 1.4,
+                            ),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: LinearProgressIndicator(
+                              value: total == 0 ? 0 : correct / total,
+                              backgroundColor: Colors.transparent,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                Color(0xFF00E676),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF00E676).withValues(alpha: 0.15),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: const Color(0xFF14181B),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(
+                                Icons.check_circle_rounded,
+                                color: Color(0xFF00E676),
+                                size: 18,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '$correct of $total correct',
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  color: Color(0xFF14181B),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          headline,
+                          style: const TextStyle(
+                            fontFamily: 'Inter',
+                            color: Color(0xFF14181B),
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
+                  const SizedBox(height: 16),
+                  // FIXED: Flat info banner for "Nice work!" (No chunky shadow, flat clean border)
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFD86B),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: const Color(0xFF14181B),
+                        width: 1.6,
+                      ),
+                    ),
+                    child: Text(
+                      note,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontFamily: 'Inter',
+                        color: Color(0xFF14181B),
+                        fontSize: 15,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 52,
+                    child: ElevatedButton(
+                      onPressed: onContinue,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF14181B),
+                        foregroundColor: Colors.white,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                          side: const BorderSide(
+                            color: Color(0xFF14181B),
+                            width: 1.8,
+                          ),
+                        ),
+                      ),
+                      child: const Text(
+                        'Continue',
+                        style: TextStyle(
+                          fontFamily: 'Inter',
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton(
+                    onPressed: onTryAgain,
+                    child: const Text(
+                      'Try Again',
+                      style: TextStyle(
+                        fontFamily: 'Inter',
+                        color: Color(0xFF57636C),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
+}
+
+class _SubtleDotGridPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF22A2F2).withOpacity(0.10)
+      ..style = PaintingStyle.fill;
+
+    const spacing = 26.0;
+    const radius = 1.6;
+
+    for (double x = 14; x < size.width; x += spacing) {
+      for (double y = 14; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), radius, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
