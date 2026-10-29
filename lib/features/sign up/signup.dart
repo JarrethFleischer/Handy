@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:country_picker/country_picker.dart';
+import 'package:handy/services/auth_service.dart';
 import 'package:handy/features/login/login.dart';
+import 'package:handy/features/navbar/navbar.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -11,10 +12,37 @@ class SignupScreen extends StatefulWidget {
 }
 
 class _SignupScreenState extends State<SignupScreen> {
-  String _selectedCountryCode = '+1'; // Default country code
-  String _selectedFlagEmoji = '🇺🇸'; // Default country flag
+  final _formKey = GlobalKey<FormState>();
+  bool _loading = false;
 
-  //final _formKey = GlobalKey<FormState>();
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _loading = true);
+    try {
+      await AuthService.signup(
+        name: _name.text.trim(),
+        email: _email.text.trim(),
+        password: _password.text,
+      );
+      await AuthService.login(
+        username: _email.text.trim(),
+        password: _password.text,
+      );
+      if (!mounted) return;
+      Navigator.pushAndRemoveUntil(
+        context,
+        MaterialPageRoute(builder: (context) => const AppNavigationShell()),
+        (route) => false,
+      );
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
 
   final _name = TextEditingController();
   final _email = TextEditingController();
@@ -70,6 +98,32 @@ class _SignupScreenState extends State<SignupScreen> {
   //   (route) => false,
   // );
   //}
+
+  InputDecoration _fieldDecoration({
+    required String hint,
+    required IconData icon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
+      prefixIcon: Icon(icon, color: const Color(0xFFF8AE2B), size: 25),
+      suffixIcon: suffixIcon,
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+      errorBorder: InputBorder.none,
+      focusedErrorBorder: InputBorder.none,
+      contentPadding: const EdgeInsets.fromLTRB(4, 14, 8, 6),
+      errorStyle: const TextStyle(
+        color: Color(0xFFE53935),
+        fontSize: 12,
+        height: 1.35,
+        fontWeight: FontWeight.w500,
+      ),
+      errorMaxLines: 2,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -145,7 +199,15 @@ class _SignupScreenState extends State<SignupScreen> {
                                           ),
                                         ),
                                         GestureDetector(
-                                          onTap: () => Navigator.pop(context),
+                                          onTap: () {
+                                            Navigator.push(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (context) =>
+                                                    const LoginScreen(),
+                                              ),
+                                            );
+                                          },
                                           child: const Text(
                                             'Login',
                                             style: TextStyle(
@@ -160,214 +222,85 @@ class _SignupScreenState extends State<SignupScreen> {
                                     const SizedBox(height: 24),
 
                                     Container(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        8,
+                                        6,
+                                        8,
+                                        10,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: Colors.white,
                                         borderRadius: BorderRadius.circular(12),
                                       ),
-                                      child: Column(
-                                        children: [
-                                          // 1. NAME FIELD
-                                          TextFormField(
-                                            controller: _name,
-                                            textCapitalization:
-                                                TextCapitalization.words,
-                                            decoration: const InputDecoration(
-                                              hintText: 'Username',
-                                              hintStyle: TextStyle(
-                                                color: Colors.black38,
-                                                fontSize: 14,
+                                      child: Form(
+                                        key: _formKey,
+                                        child: Column(
+                                          children: [
+                                            TextFormField(
+                                              controller: _name,
+                                              validator: (v) =>
+                                                  (v == null ||
+                                                      v.trim().isEmpty)
+                                                  ? 'Username is required'
+                                                  : null,
+                                              textCapitalization:
+                                                  TextCapitalization.words,
+                                              decoration: _fieldDecoration(
+                                                hint: 'Username',
+                                                icon: Icons.person_outline,
                                               ),
-                                              prefixIcon: Icon(
-                                                Icons.person_outline,
-                                                color: Color(0xFFF8AE2B),
-                                                size: 25,
-                                              ),
-                                              border: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    vertical: 16,
-                                                  ),
                                             ),
-                                          ),
-                                          Divider(
-                                            height: 1,
-                                            color: Colors.grey[200],
-                                          ),
-
-                                          TextFormField(
-                                            controller: _email,
-                                            keyboardType:
-                                                TextInputType.emailAddress,
-                                            decoration: const InputDecoration(
-                                              hintText: 'email@example.com',
-                                              hintStyle: TextStyle(
-                                                color: Colors.black38,
-                                                fontSize: 14,
+                                            const _FieldDivider(),
+                                            TextFormField(
+                                              controller: _email,
+                                              validator: (v) {
+                                                if (v == null ||
+                                                    v.trim().isEmpty) {
+                                                  return 'Email is required';
+                                                }
+                                                if (!emailRegex.hasMatch(
+                                                  v.trim(),
+                                                )) {
+                                                  return 'Enter a valid email';
+                                                }
+                                                return null;
+                                              },
+                                              keyboardType:
+                                                  TextInputType.emailAddress,
+                                              decoration: _fieldDecoration(
+                                                hint: 'email@example.com',
+                                                icon: Icons.mail_outline,
                                               ),
-                                              prefixIcon: Icon(
-                                                Icons.mail_outline,
-                                                color: Color(0xFFF8AE2B),
-                                                size: 25,
-                                              ),
-                                              border: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    vertical: 16,
-                                                  ),
                                             ),
-                                          ),
-                                          Divider(
-                                            height: 1,
-                                            color: Colors.grey[200],
-                                          ),
-
-                                          TextFormField(
-                                            controller: _dob,
-                                            readOnly:
-                                                true, // Prevents typing, forces them to use the calendar
-                                            onTap:
-                                                _selectDate, // Opens the calendar popup
-                                            decoration: const InputDecoration(
-                                              hintText: 'DD/MM/YYYY',
-                                              hintStyle: TextStyle(
-                                                color: Colors.black38,
-                                                fontSize: 14,
-                                              ),
-                                              prefixIcon: Icon(
-                                                Icons.calendar_today_outlined,
-                                                color: Color(0xFFF8AE2B),
-                                                size: 25,
-                                              ),
-                                              suffixIcon: Icon(
-                                                Icons.calendar_month,
-                                                color: Colors.grey,
-                                              ),
-                                              border: InputBorder.none,
-                                              contentPadding:
-                                                  EdgeInsets.symmetric(
-                                                    vertical: 16,
+                                            const _FieldDivider(),
+                                            TextFormField(
+                                              controller: _password,
+                                              obscureText: _obscurePassword,
+                                              validator: (v) =>
+                                                  (v == null || v.length < 6)
+                                                  ? 'Password must be at least 6 characters'
+                                                  : null,
+                                              decoration: _fieldDecoration(
+                                                hint: 'Password',
+                                                icon: Icons.lock_outline,
+                                                suffixIcon: IconButton(
+                                                  icon: Icon(
+                                                    _obscurePassword
+                                                        ? Icons.visibility_off
+                                                        : Icons.visibility,
+                                                    color: Colors.grey,
                                                   ),
-                                            ),
-                                          ),
-                                          Divider(
-                                            height: 1,
-                                            color: Colors.grey[200],
-                                          ),
-
-                                          TextFormField(
-                                            controller: _phone,
-                                            keyboardType: TextInputType.phone,
-                                            decoration: InputDecoration(
-                                              hintText: '123456789',
-                                              hintStyle: TextStyle(
-                                                color: Colors.black38,
-                                                fontSize: 14,
-                                              ),
-                                              prefixIcon: Padding(
-                                                padding: const EdgeInsets.only(
-                                                  left: 12,
-                                                  right: 8,
-                                                ),
-                                                child: GestureDetector(
-                                                  onTap: () {
-                                                    showCountryPicker(
-                                                      context: context,
-                                                      showPhoneCode: true,
-                                                      onSelect: (Country country) {
-                                                        setState(() {
-                                                          _selectedCountryCode =
-                                                              country.phoneCode;
-                                                          _selectedFlagEmoji =
-                                                              country
-                                                                  .flagEmoji; // Update the flag emoji when a country is selected
-                                                        });
-                                                      },
-                                                    );
+                                                  onPressed: () {
+                                                    setState(() {
+                                                      _obscurePassword =
+                                                          !_obscurePassword;
+                                                    });
                                                   },
-                                                  child: Row(
-                                                    mainAxisSize:
-                                                        MainAxisSize.min,
-                                                    children: [
-                                                      Text(
-                                                        _selectedFlagEmoji,
-                                                        style: const TextStyle(
-                                                          fontSize: 20,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 4),
-                                                      Text(
-                                                        '+$_selectedCountryCode',
-                                                        style: const TextStyle(
-                                                          fontWeight:
-                                                              FontWeight.bold,
-                                                          fontSize: 13,
-                                                        ),
-                                                      ),
-                                                      const SizedBox(width: 4),
-                                                      Icon(
-                                                        Icons
-                                                            .keyboard_arrow_down,
-                                                        color: Colors.grey[600],
-                                                        size: 18,
-                                                      ),
-                                                      const SizedBox(width: 8),
-                                                      Container(
-                                                        width: 1,
-                                                        height: 24,
-                                                        color: Colors.grey[300],
-                                                      ),
-                                                    ],
-                                                  ),
                                                 ),
                                               ),
-                                              border: InputBorder.none,
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 16,
-                                                  ),
                                             ),
-                                          ),
-                                          Divider(
-                                            height: 1,
-                                            color: Colors.grey[200],
-                                          ),
-
-                                          TextFormField(
-                                            controller: _password,
-                                            obscureText: _obscurePassword,
-                                            decoration: InputDecoration(
-                                              hintText: '********',
-                                              hintStyle: TextStyle(
-                                                color: Colors.black38,
-                                                fontSize: 14,
-                                              ),
-                                              prefixIcon: const Icon(
-                                                Icons.lock_outline,
-                                                color: Color(0xFFF8AE2B),
-                                                size: 25,
-                                              ),
-                                              suffixIcon: IconButton(
-                                                icon: Icon(
-                                                  _obscurePassword
-                                                      ? Icons.visibility_off
-                                                      : Icons.visibility,
-                                                  color: Colors.grey,
-                                                ),
-                                                onPressed: () {
-                                                  setState(() {
-                                                    _obscurePassword =
-                                                        !_obscurePassword;
-                                                  });
-                                                },
-                                              ),
-                                              border: InputBorder.none,
-                                              contentPadding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 16,
-                                                  ),
-                                            ),
-                                          ),
-                                        ],
+                                          ],
+                                        ),
                                       ),
                                     ),
                                     const SizedBox(height: 24),
@@ -384,34 +317,36 @@ class _SignupScreenState extends State<SignupScreen> {
                                             ),
                                           ),
                                         ),
-                                        //onPressed: _submit,
-                                        onPressed: () {
-                                          Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (context) =>
-                                                  const LoginScreen(),
-                                            ),
-                                          );
-                                        },
-                                        child: const Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.add,
-                                              size: 20,
-                                            ), // The Plus icon from Figma
-                                            SizedBox(width: 8),
-                                            Text(
-                                              'Sign Up',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold,
+                                        onPressed: _loading ? null : _submit,
+                                        child: _loading
+                                            ? const SizedBox(
+                                                height: 22,
+                                                width: 22,
+                                                child:
+                                                    CircularProgressIndicator(
+                                                      color: Colors.white,
+                                                      strokeWidth: 2,
+                                                    ),
+                                              )
+                                            : const Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.center,
+                                                children: [
+                                                  Icon(
+                                                    Icons.add,
+                                                    size: 20,
+                                                  ), // The Plus icon from Figma
+                                                  SizedBox(width: 8),
+                                                  Text(
+                                                    'Sign Up',
+                                                    style: TextStyle(
+                                                      fontSize: 16,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                            ),
-                                          ],
-                                        ),
                                       ),
                                     ),
                                   ],
@@ -429,6 +364,18 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _FieldDivider extends StatelessWidget {
+  const _FieldDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(16, 2, 16, 2),
+      child: Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE)),
     );
   }
 }

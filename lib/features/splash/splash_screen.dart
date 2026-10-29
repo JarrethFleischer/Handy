@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:handy/features/login/login.dart'; // Import the SVG package
+import 'package:handy/features/login/login.dart';
+import 'package:handy/features/navbar/navbar.dart';
+import 'package:handy/services/auth_service.dart';
+import 'package:handy/features/sign up/signup.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -15,7 +18,8 @@ class SplashScreen extends StatelessWidget {
           Positioned.fill(
             child: Image.asset(
               'assets/images/full_screen_bg.png',
-              fit: BoxFit.cover, // This forces the image to stretch and fill every corner
+              fit: BoxFit
+                  .cover, // This forces the image to stretch and fill every corner
             ),
           ),
 
@@ -25,10 +29,12 @@ class SplashScreen extends StatelessWidget {
             // EVERYTHING MUST BE INSIDE THIS COLUMN
             child: Column(
               children: [
-                
                 // --- 1. TOP HEADER ---
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 16.0,
+                  ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -38,13 +44,21 @@ class SplashScreen extends StatelessWidget {
                         height: 32, // Adjust size as needed
                       ),
                       TextButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const LoginScreen(),
+                            ),
+                          );
+                        },
                         child: const Text(
                           'Login',
                           style: TextStyle(
                             color: Colors.white,
                             decoration: TextDecoration.underline,
                             decorationColor: Colors.white,
+                            fontSize: 17,
                           ),
                         ),
                       ),
@@ -58,7 +72,8 @@ class SplashScreen extends StatelessWidget {
                     child: Builder(
                       builder: (context) {
                         // 1. Define the master width for the card (80% of screen)
-                        double cardWidth = MediaQuery.of(context).size.width * 0.8;
+                        double cardWidth =
+                            MediaQuery.of(context).size.width * 0.8;
 
                         // We wrap the Stack in a SizedBox so the Stack boundaries
                         // perfectly match the SVG background.
@@ -81,7 +96,9 @@ class SplashScreen extends StatelessWidget {
                   // This decoration creates the white background and rounds the top corners
                   decoration: const BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+                    borderRadius: BorderRadius.vertical(
+                      top: Radius.circular(40),
+                    ),
                   ),
                   padding: const EdgeInsets.fromLTRB(32, 48, 32, 56),
                   child: Column(
@@ -108,7 +125,8 @@ class SplashScreen extends StatelessWidget {
                           // THE YELLOW HIGHLIGHT WITH SOLID SHADOW
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 12, // slightly widened so it looks like a box
+                              horizontal:
+                                  12, // slightly widened so it looks like a box
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
@@ -120,8 +138,12 @@ class SplashScreen extends StatelessWidget {
                               boxShadow: const [
                                 BoxShadow(
                                   color: Colors.black, // Solid shadow color
-                                  offset: Offset(4, 4), // Pushes shadow down and right
-                                  blurRadius: 0, // No blur makes it a solid block
+                                  offset: Offset(
+                                    4,
+                                    4,
+                                  ), // Pushes shadow down and right
+                                  blurRadius:
+                                      0, // No blur makes it a solid block
                                 ),
                               ],
                             ),
@@ -157,12 +179,16 @@ class SplashScreen extends StatelessWidget {
                               borderRadius: BorderRadius.circular(32),
                             ),
                           ),
-                          onPressed: () {
-                            Navigator.push(
+                          onPressed: () async {
+                            final signedIn = await AuthService.restoreSession();
+                            if (!context.mounted) return;
+                            final next = signedIn
+                                ? const AppNavigationShell()
+                                : const SignupScreen();
+                            Navigator.pushAndRemoveUntil(
                               context,
-                              MaterialPageRoute(
-                                builder: (context) => const LoginScreen(),
-                              ),
+                              MaterialPageRoute(builder: (context) => next),
+                              (route) => false,
                             );
                           },
                           child: const Text(
@@ -177,7 +203,6 @@ class SplashScreen extends StatelessWidget {
                     ],
                   ),
                 ),
-                
               ], // <--- The Column safely closes down here now!
             ),
           ),

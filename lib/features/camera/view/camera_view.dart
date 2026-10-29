@@ -4,12 +4,14 @@ import 'package:handy/features/camera/landmarks/coordinate_normalizer.dart';
 import 'package:handy/features/camera/landmarks/gesture_sample_log.dart';
 import 'package:handy/features/camera/landmarks/hand_sample_log.dart';
 import 'package:handy/features/recognition/sign_classifier.dart';
+import 'package:handy/features/camera/view/hand_landmark_painter.dart';
 import 'package:handy/features/camera/view/landmark_values_panel.dart';
 import 'package:handy/features/camera/view/sample_capture_bar.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:hand_landmarker/hand_landmarker.dart';
+import 'package:handy/features/widget/popup.dart';
 import 'package:handy/theme/app_colors.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -25,10 +27,17 @@ class CameraView extends StatefulWidget {
     super.key,
     this.purpose = CameraPurpose.collectSamples,
     this.expectedSign,
+    this.xpReward = 100,
+    this.onReady,
   });
 
   final CameraPurpose purpose;
   final String? expectedSign;
+  final int xpReward;
+
+  /// Optional. Called once when the camera preview is ready (or failed and is
+  /// showing its error), so a loading screen on top can be hidden.
+  final VoidCallback? onReady;
 
   @override
   State<CameraView> createState() => _CameraViewState();
@@ -134,6 +143,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
           _isInitializing = false;
           _errorMessage = 'No cameras were found on this device.';
         });
+        _notifyReady();
         return;
       }
 
@@ -361,25 +371,25 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
 
   Future<void> _finishPracticeCountdown() async {
     _countdownTimer?.cancel();
-    if (_matchedDuringPractice || _expectedSignMatched) {
-      setState(() {
-        _practicePassed = true;
-      });
-      await Future<void>.delayed(const Duration(milliseconds: 900));
-      if (mounted) {
-        Navigator.pop(context, true);
-      }
-      return;
-    }
-
-    if (!mounted) {
-      return;
-    }
+    final passed = _matchedDuringPractice || _expectedSignMatched;
+    if (!mounted) return;
     setState(() {
+      _practicePassed = passed;
       _practiceStarted = false;
       _countdownRemaining = _practiceSeconds;
     });
-    _showMessage('Try again');
+    final accepted = await showSignResultDialog(
+      context,
+      correct: passed,
+      sign: widget.expectedSign ?? '',
+      xpEarned: passed ? widget.xpReward : 0,
+    );
+    if (!mounted) return;
+    if (accepted && passed) {
+      Navigator.pop(context, true);
+    } else if (accepted) {
+      Navigator.pop(context, false);
+    }
   }
 
   bool get _expectedSignMatched {
@@ -403,7 +413,12 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
     setState(() {
       _practicePassed = true;
     });
-    await Future<void>.delayed(const Duration(milliseconds: 900));
+    await showSignResultDialog(
+      context,
+      correct: true,
+      sign: widget.expectedSign ?? '',
+      xpEarned: widget.xpReward,
+    );
     if (mounted) {
       Navigator.pop(context, true);
     }
@@ -600,6 +615,7 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         _isInitializing = false;
         _errorMessage = null;
       });
+      _notifyReady();
     } on CameraException catch (error) {
       await _stopAndDispose(controller);
       _showError(_messageForCameraException(error));
@@ -686,6 +702,15 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       _isInitializing = false;
       _errorMessage = message;
     });
+    _notifyReady();
+  }
+
+  bool _readyNotified = false;
+
+  void _notifyReady() {
+    if (_readyNotified) return;
+    _readyNotified = true;
+    widget.onReady?.call();
   }
 
   String _messageForCameraException(CameraException error) {
@@ -813,81 +838,27 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
             },
             onStart: _startPracticeCountdown,
           ),
-          if (_practicePassed)
-            const ColoredBox(
-              color: Color(0xCC121212),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: Color(0xFF249689),
-                      size: 76,
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'Correct',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 34,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       );
     }
 
     if (widget.purpose == CameraPurpose.liveTest) {
-      return Stack(
+      return Column(
         children: [
-          Column(
-            children: [
-              preview,
-              _LivePredictionPanel(
-                label: _predictedLabel,
-                confidence: _predictedConfidence,
-                motionLabel: _motionLabel,
-                motionConfidence: _motionConfidence,
-                loadError: _classifier?.loadError,
-                isLoading: _classifier == null,
-                expectedSign: widget.expectedSign,
-                isMatched: _expectedSignMatched,
-                onConfirm: widget.expectedSign == null
-                    ? null
-                    : _confirmExpectedSign,
-              ),
-            ],
+          preview,
+          _LivePredictionPanel(
+            label: _predictedLabel,
+            confidence: _predictedConfidence,
+            motionLabel: _motionLabel,
+            motionConfidence: _motionConfidence,
+            loadError: _classifier?.loadError,
+            isLoading: _classifier == null,
+            expectedSign: widget.expectedSign,
+            isMatched: _expectedSignMatched,
+            onConfirm: widget.expectedSign == null
+                ? null
+                : _confirmExpectedSign,
           ),
-          if (_practicePassed)
-            const ColoredBox(
-              color: Color(0xCC121212),
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.check_circle,
-                      color: Color(0xFF249689),
-                      size: 76,
-                    ),
-                    SizedBox(height: 12),
-                    Text(
-                      'Correct',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 34,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
         ],
       );
     }
@@ -927,9 +898,28 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
         child: SizedBox(
           width: previewSize.height,
           height: previewSize.width,
-          child: CameraPreview(
-            controller,
-            key: ValueKey(controller.description.name),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              CameraPreview(
+                controller,
+                key: ValueKey(controller.description.name),
+              ),
+              ValueListenableBuilder<List<Hand>>(
+                valueListenable: _hands,
+                builder: (context, hands, _) {
+                  return CustomPaint(
+                    painter: HandLandmarkPainter(
+                      hands: hands,
+                      previewSize: previewSize,
+                      lensDirection: controller.description.lensDirection,
+                      sensorOrientation:
+                          controller.description.sensorOrientation,
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
         ),
       ),
