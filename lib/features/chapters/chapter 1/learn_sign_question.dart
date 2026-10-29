@@ -162,6 +162,7 @@ class _LessonVideoState extends State<LessonVideo> {
   Future<void> _initializeVideo() async {
     try {
       await _controller.initialize();
+      await _controller.setVolume(0);
       await _controller.setLooping(true);
       await _controller.play();
       if (mounted) {
