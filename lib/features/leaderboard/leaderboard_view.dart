@@ -160,11 +160,7 @@ class _LeaderboardViewState extends State<LeaderboardView> {
   }
 
   List<int> get _listRanks {
-    final ranks = <int>{for (var r = 1; r <= 10; r++) r};
-    for (final user in _users) {
-      ranks.add(user.userRank);
-    }
-    return ranks.toList()..sort();
+    return [for (var rank = 4; rank <= 10; rank++) rank];
   }
 
   LeaderboardUser? _userAtRank(int rank) {

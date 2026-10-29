@@ -212,15 +212,10 @@ class _HomepageViewState extends State<HomepageView> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      HomepageView._skyBgTop,
-                      HomepageView._skyBgBottom,
-                    ],
+                    colors: [HomepageView._skyBgTop, HomepageView._skyBgBottom],
                   ),
                 ),
-                child: CustomPaint(
-                  painter: _SubtleDotGridPainter(),
-                ),
+                child: CustomPaint(painter: _SubtleDotGridPainter()),
               ),
             ),
 
@@ -319,12 +314,6 @@ class _HomepageViewState extends State<HomepageView> {
                   color: HomepageView._inkBlack,
                 ),
               ),
-              SizedBox(width: 4),
-              Icon(
-                Icons.keyboard_arrow_down_rounded,
-                size: 18,
-                color: HomepageView._inkBlack,
-              ),
             ],
           ),
         ),
@@ -379,10 +368,7 @@ class _HomepageViewState extends State<HomepageView> {
               color: HomepageView._primaryBlue,
             ),
             const SizedBox(height: 12),
-            Text(
-              _error!,
-              style: HomepageView._title.copyWith(fontSize: 16),
-            ),
+            Text(_error!, style: HomepageView._title.copyWith(fontSize: 16)),
             const SizedBox(height: 14),
             ElevatedButton.icon(
               onPressed: _loadHomepage,
@@ -954,9 +940,7 @@ class _PathConnector extends StatelessWidget {
     return Container(
       width: 6,
       height: height,
-      decoration: const BoxDecoration(
-        color: HomepageView._inkBlack,
-      ),
+      decoration: const BoxDecoration(color: HomepageView._inkBlack),
     );
   }
 }

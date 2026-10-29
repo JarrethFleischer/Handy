@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:handy/features/chapters/chapter 1/learn_sign_question.dart';
 import 'package:handy/features/chapters/chapter_controller.dart';
+import 'package:handy/features/widget/popup.dart';
 import 'package:handy/features/widget/sound.dart';
 import 'package:handy/services/auth_service.dart';
 import 'package:handy/theme/app_colors.dart';
@@ -132,7 +133,9 @@ class _NameTheSignViewState extends State<NameTheSignView> {
   List<_SignPrompt> _signsForLevel(List<Chapter> chapters, int level) {
     final byUrl = <String, Set<String>>{};
 
-    for (final chapter in chapters.where((item) => item.chapterLevel == level)) {
+    for (final chapter in chapters.where(
+      (item) => item.chapterLevel == level,
+    )) {
       for (final lesson in chapter.chapterStory.chapterContent) {
         for (final question in lesson.lessonQuestions) {
           for (final url in question.playableVideoUrls) {
@@ -151,10 +154,8 @@ class _NameTheSignViewState extends State<NameTheSignView> {
 
     return byUrl.entries
         .map(
-          (entry) => _SignPrompt(
-            videoUrl: entry.key,
-            answers: entry.value.toList(),
-          ),
+          (entry) =>
+              _SignPrompt(videoUrl: entry.key, answers: entry.value.toList()),
         )
         .toList();
   }
@@ -236,62 +237,7 @@ class _NameTheSignViewState extends State<NameTheSignView> {
   /// Pop-up confirmation dialog when user taps back during an active quiz
   Future<void> _onBackPressed() async {
     if (_chapter != null) {
-      final shouldLeave = await showDialog<bool>(
-        context: context,
-        builder: (context) => AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-            side: const BorderSide(color: Color(0xFF14181B), width: 2),
-          ),
-          backgroundColor: Colors.white,
-          title: const Text(
-            'Leave Quiz?',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontWeight: FontWeight.w900,
-              color: Color(0xFF14181B),
-            ),
-          ),
-          content: const Text(
-            'Are you sure you want to leave? Your current progress in this session will be lost.',
-            style: TextStyle(
-              fontFamily: 'Inter',
-              fontSize: 13.5,
-              color: Color(0xFF57636C),
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text(
-                'Cancel',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFF57636C),
-                ),
-              ),
-            ),
-            ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFF5252),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text(
-                'Yes, Leave',
-                style: TextStyle(
-                  fontFamily: 'Inter',
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-          ],
-        ),
-      );
+      final shouldLeave = await showLeaveLessonDialog(context);
 
       if (shouldLeave == true) {
         _leaveQuiz();
@@ -323,7 +269,9 @@ class _NameTheSignViewState extends State<NameTheSignView> {
     final hasAnswer = _answerController.text.trim().isNotEmpty;
     final progress = ((_index + 1) / _signs.length).clamp(0.0, 1.0);
     final isLast = _index + 1 >= _signs.length;
-    final correctAnswerText = current.answers.isNotEmpty ? current.answers.first : 'Unknown';
+    final correctAnswerText = current.answers.isNotEmpty
+        ? current.answers.first
+        : 'Unknown';
 
     return WillPopScope(
       onWillPop: () async {
@@ -416,8 +364,10 @@ class _NameTheSignViewState extends State<NameTheSignView> {
                                         backgroundColor: Colors.transparent,
                                         valueColor:
                                             const AlwaysStoppedAnimation<Color>(
-                                          Color(0xFFFFD86B), // Bright Sunny Yellow
-                                        ),
+                                              Color(
+                                                0xFFFFD86B,
+                                              ), // Bright Sunny Yellow
+                                            ),
                                       ),
                                     ),
                                   ),
@@ -492,9 +442,13 @@ class _NameTheSignViewState extends State<NameTheSignView> {
                             ),
                             filled: true,
                             fillColor: _isCorrect == true
-                                ? const Color(0xFF00E676).withValues(alpha: 0.12)
+                                ? const Color(
+                                    0xFF00E676,
+                                  ).withValues(alpha: 0.12)
                                 : _isCorrect == false
-                                ? const Color(0xFFFF5252).withValues(alpha: 0.12)
+                                ? const Color(
+                                    0xFFFF5252,
+                                  ).withValues(alpha: 0.12)
                                 : Colors.white,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: 20,
@@ -545,7 +499,8 @@ class _NameTheSignViewState extends State<NameTheSignView> {
                     color: const Color(0xFFFF5252),
                     icon: Icons.cancel_rounded,
                     title: 'Incorrect',
-                    subtitle: 'Correct answer: $correctAnswerText', // Duolingo style correct word reveal
+                    subtitle:
+                        'Correct answer: $correctAnswerText', // Duolingo style correct word reveal
                     buttonLabel: isLast ? 'Done' : 'Continue',
                     onPressed: _nextSign,
                   )
@@ -603,9 +558,7 @@ class _NameTheSignViewState extends State<NameTheSignView> {
                   colors: [Color(0xFFDDF1FF), Color(0xFFF3FAFF)],
                 ),
               ),
-              child: CustomPaint(
-                painter: _SubtleDotGridPainter(),
-              ),
+              child: CustomPaint(painter: _SubtleDotGridPainter()),
             ),
           ),
           SafeArea(
@@ -670,7 +623,9 @@ class _NameTheSignViewState extends State<NameTheSignView> {
                   if (_loading)
                     const Padding(
                       padding: EdgeInsets.only(bottom: 16),
-                      child: CircularProgressIndicator(color: Color(0xFF22A2F2)),
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF22A2F2),
+                      ),
                     ),
                   if (_error != null) ...[
                     Text(
@@ -692,7 +647,7 @@ class _NameTheSignViewState extends State<NameTheSignView> {
                         ? 'Loading signs...'
                         : _chapter1Unlocked
                         ? '${_chapter1!.length} signs available'
-                        : 'Complete both lessons to unlock',
+                        : 'Complete all lessons to unlock',
                     onTap: _loading || !_chapter1Unlocked
                         ? null
                         : () => _startChapter('Chapter 1'),
@@ -706,7 +661,7 @@ class _NameTheSignViewState extends State<NameTheSignView> {
                         ? 'Loading signs...'
                         : _chapter2Unlocked
                         ? '${_chapter2!.length} signs available'
-                        : 'Complete both lessons to unlock',
+                        : 'Complete all lessons to unlock',
                     onTap: _loading || !_chapter2Unlocked
                         ? null
                         : () => _startChapter('Chapter 2'),
@@ -746,9 +701,15 @@ class _ChapterChoiceState extends State<_ChapterChoice> {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: widget.onTap == null ? null : (_) => setState(() => _isPressed = true),
-      onTapUp: widget.onTap == null ? null : (_) => setState(() => _isPressed = false),
-      onTapCancel: widget.onTap == null ? null : () => setState(() => _isPressed = false),
+      onTapDown: widget.onTap == null
+          ? null
+          : (_) => setState(() => _isPressed = true),
+      onTapUp: widget.onTap == null
+          ? null
+          : (_) => setState(() => _isPressed = false),
+      onTapCancel: widget.onTap == null
+          ? null
+          : () => setState(() => _isPressed = false),
       onTap: widget.onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 100),
@@ -757,12 +718,16 @@ class _ChapterChoiceState extends State<_ChapterChoice> {
           color: widget.locked ? const Color(0xFFF8FAFC) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: widget.locked ? const Color(0xFF94A3B8) : const Color(0xFF14181B),
+            color: widget.locked
+                ? const Color(0xFF94A3B8)
+                : const Color(0xFF14181B),
             width: 1.8,
           ),
           boxShadow: [
             BoxShadow(
-              color: widget.locked ? const Color(0xFFCBD5E1) : const Color(0xFF14181B),
+              color: widget.locked
+                  ? const Color(0xFFCBD5E1)
+                  : const Color(0xFF14181B),
               offset: Offset(0, widget.locked ? 2 : (_isPressed ? 2 : 5)),
               blurRadius: 0,
             ),
@@ -777,20 +742,25 @@ class _ChapterChoiceState extends State<_ChapterChoice> {
               children: [
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
-                    color: widget.locked ? const Color(0xFFE2E8F0) : widget.headerColor,
+                    color: widget.locked
+                        ? const Color(0xFFE2E8F0)
+                        : widget.headerColor,
                     border: const Border(
-                      bottom: BorderSide(
-                        color: Color(0xFF14181B),
-                        width: 1.6,
-                      ),
+                      bottom: BorderSide(color: Color(0xFF14181B), width: 1.6),
                     ),
                   ),
                   child: Row(
                     children: [
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(8),
@@ -820,7 +790,9 @@ class _ChapterChoiceState extends State<_ChapterChoice> {
                         width: 40,
                         height: 40,
                         decoration: BoxDecoration(
-                          color: widget.locked ? const Color(0xFFE2E8F0) : const Color(0xFFE0F7FF),
+                          color: widget.locked
+                              ? const Color(0xFFE2E8F0)
+                              : const Color(0xFFE0F7FF),
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: const Color(0xFF14181B),
@@ -828,8 +800,12 @@ class _ChapterChoiceState extends State<_ChapterChoice> {
                           ),
                         ),
                         child: Icon(
-                          widget.locked ? Icons.lock_rounded : Icons.menu_book_rounded,
-                          color: widget.locked ? const Color(0xFF64748B) : const Color(0xFF22A2F2),
+                          widget.locked
+                              ? Icons.lock_rounded
+                              : Icons.menu_book_rounded,
+                          color: widget.locked
+                              ? const Color(0xFF64748B)
+                              : const Color(0xFF22A2F2),
                           size: 20,
                         ),
                       ),
@@ -860,7 +836,11 @@ class _ChapterChoiceState extends State<_ChapterChoice> {
                           ],
                         ),
                       ),
-                      const Icon(Icons.chevron_right_rounded, color: Color(0xFF14181B), size: 26),
+                      const Icon(
+                        Icons.chevron_right_rounded,
+                        color: Color(0xFF14181B),
+                        size: 26,
+                      ),
                     ],
                   ),
                 ),

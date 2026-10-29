@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:handy/services/auth_service.dart';
 import 'package:handy/features/widget/popup.dart';
+import 'package:handy/features/widget/sound.dart';
+import 'package:handy/services/auth_service.dart';
 
 typedef LessonContinue = void Function(bool correct, {bool awardsPoints});
 
@@ -42,6 +43,13 @@ class _LessonFlowState extends State<LessonFlow> {
     }
 
     if (!mounted) return;
+    final total = widget.questions.length;
+    final percent = total == 0 ? 0 : _correctCount / total;
+    if (percent >= 0.8) {
+      playWinSound();
+    } else {
+      playLoseSound();
+    }
     setState(() => _showComplete = true);
   }
 

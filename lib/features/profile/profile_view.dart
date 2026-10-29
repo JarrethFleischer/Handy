@@ -21,6 +21,7 @@ class _ProfileViewState extends State<ProfileView> {
   final _controller = LeaderboardController();
   CurrentUserProfile? _profile;
   bool _isLoading = true;
+  bool _restoringStreak = false;
 
   @override
   void initState() {
@@ -61,6 +62,35 @@ class _ProfileViewState extends State<ProfileView> {
     } catch (_) {
       if (!mounted) return;
       setState(() => _isLoading = false);
+    }
+  }
+
+  bool _missedStreakDay(String? updated) {
+    if (updated == null || updated.isEmpty) return false;
+    final parsed = DateTime.tryParse(updated);
+    if (parsed == null) return false;
+    final last = DateTime(parsed.year, parsed.month, parsed.day);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return today.difference(last).inDays > 1;
+  }
+
+  Future<void> _restoreStreak() async {
+    setState(() => _restoringStreak = true);
+    try {
+      await AuthService.restoreStreak();
+      await _load();
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Streak restored')),
+      );
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } finally {
+      if (mounted) setState(() => _restoringStreak = false);
     }
   }
 
@@ -246,7 +276,12 @@ class _ProfileViewState extends State<ProfileView> {
                     // --- STREAK CARD ---
                     _isLoading
                         ? _bone(width: double.infinity, height: 140, radius: 20)
-                        : _DailyStreakCard(streakCount: _profile?.userStreakCount ?? 0),
+                        : _DailyStreakCard(
+                            streakCount: _profile?.userStreakCount ?? 0,
+                            canRestore: _missedStreakDay(_profile?.streakUpdated),
+                            restoring: _restoringStreak,
+                            onRestore: _restoreStreak,
+                          ),
                     const SizedBox(height: 24),
 
                     // --- ACCOUNT SECTION ---
@@ -547,9 +582,17 @@ class _ProfileViewState extends State<ProfileView> {
 
 /// Enhanced Daily Streak Card: Vertical layout with flame/deadStreak image, number, and calendar check/dead states
 class _DailyStreakCard extends StatelessWidget {
-  const _DailyStreakCard({required this.streakCount});
+  const _DailyStreakCard({
+    required this.streakCount,
+    required this.canRestore,
+    required this.restoring,
+    required this.onRestore,
+  });
 
   final int streakCount;
+  final bool canRestore;
+  final bool restoring;
+  final VoidCallback onRestore;
   static const _days = ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'];
 
   @override
@@ -597,8 +640,9 @@ class _DailyStreakCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: List.generate(_days.length, (index) {
               final isToday = index == todayIndex;
-              // If streak > 0, consider past/today days as completed for the visual checkmark style
-              final bool isCompletedDay = hasStreak && index <= todayIndex;
+              final daysBeforeToday = (todayIndex - index + 7) % 7;
+              final bool isCompletedDay =
+                  hasStreak && daysBeforeToday < streakCount;
 
               return Column(
                 children: [
@@ -636,6 +680,33 @@ class _DailyStreakCard extends StatelessWidget {
               );
             }),
           ),
+          if (canRestore) ...[
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              height: 44,
+              child: ElevatedButton(
+                onPressed: restoring ? null : onRestore,
+                style: ElevatedButton.styleFrom(
+                  elevation: 0,
+                  backgroundColor: const Color(0xFFFFD86B),
+                  foregroundColor: const Color(0xFF14181B),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    side: const BorderSide(color: Color(0xFF14181B), width: 1.6),
+                  ),
+                ),
+                child: Text(
+                  restoring ? 'Restoring...' : 'Restore streak',
+                  style: const TextStyle(
+                    fontFamily: 'Inter',
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:handy/features/navbar/navbar.dart';
 import 'package:handy/features/splash/splash_screen.dart';
-import 'package:handy/features/widget/sound.dart';
 import 'package:handy/services/auth_service.dart';
 
 Future<void> main() async {
@@ -18,9 +17,7 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      builder: (context, child) {
-        return ClickSoundLayer(child: child ?? const SizedBox.shrink());
-      },
+      debugShowCheckedModeBanner: false,
       home: signedIn ? const AppNavigationShell() : const SplashScreen(),
     );
   }

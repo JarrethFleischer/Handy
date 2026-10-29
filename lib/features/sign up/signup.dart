@@ -99,6 +99,32 @@ class _SignupScreenState extends State<SignupScreen> {
   // );
   //}
 
+  InputDecoration _fieldDecoration({
+    required String hint,
+    required IconData icon,
+    Widget? suffixIcon,
+  }) {
+    return InputDecoration(
+      hintText: hint,
+      hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
+      prefixIcon: Icon(icon, color: const Color(0xFFF8AE2B), size: 25),
+      suffixIcon: suffixIcon,
+      border: InputBorder.none,
+      enabledBorder: InputBorder.none,
+      focusedBorder: InputBorder.none,
+      errorBorder: InputBorder.none,
+      focusedErrorBorder: InputBorder.none,
+      contentPadding: const EdgeInsets.fromLTRB(4, 14, 8, 6),
+      errorStyle: const TextStyle(
+        color: Color(0xFFE53935),
+        fontSize: 12,
+        height: 1.35,
+        fontWeight: FontWeight.w500,
+      ),
+      errorMaxLines: 2,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -196,6 +222,12 @@ class _SignupScreenState extends State<SignupScreen> {
                                     const SizedBox(height: 24),
 
                                     Container(
+                                      padding: const EdgeInsets.fromLTRB(
+                                        8,
+                                        6,
+                                        8,
+                                        10,
+                                      ),
                                       decoration: BoxDecoration(
                                         color: Colors.white,
                                         borderRadius: BorderRadius.circular(12),
@@ -204,7 +236,6 @@ class _SignupScreenState extends State<SignupScreen> {
                                         key: _formKey,
                                         child: Column(
                                           children: [
-                                            // 1. NAME FIELD
                                             TextFormField(
                                               controller: _name,
                                               validator: (v) =>
@@ -214,29 +245,12 @@ class _SignupScreenState extends State<SignupScreen> {
                                                   : null,
                                               textCapitalization:
                                                   TextCapitalization.words,
-                                              decoration: const InputDecoration(
-                                                hintText: 'Username',
-                                                hintStyle: TextStyle(
-                                                  color: Colors.black38,
-                                                  fontSize: 14,
-                                                ),
-                                                prefixIcon: Icon(
-                                                  Icons.person_outline,
-                                                  color: Color(0xFFF8AE2B),
-                                                  size: 25,
-                                                ),
-                                                border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      vertical: 16,
-                                                    ),
+                                              decoration: _fieldDecoration(
+                                                hint: 'Username',
+                                                icon: Icons.person_outline,
                                               ),
                                             ),
-                                            Divider(
-                                              height: 1,
-                                              color: Colors.grey[200],
-                                            ),
-
+                                            const _FieldDivider(),
                                             TextFormField(
                                               controller: _email,
                                               validator: (v) {
@@ -253,29 +267,12 @@ class _SignupScreenState extends State<SignupScreen> {
                                               },
                                               keyboardType:
                                                   TextInputType.emailAddress,
-                                              decoration: const InputDecoration(
-                                                hintText: 'email@example.com',
-                                                hintStyle: TextStyle(
-                                                  color: Colors.black38,
-                                                  fontSize: 14,
-                                                ),
-                                                prefixIcon: Icon(
-                                                  Icons.mail_outline,
-                                                  color: Color(0xFFF8AE2B),
-                                                  size: 25,
-                                                ),
-                                                border: InputBorder.none,
-                                                contentPadding:
-                                                    EdgeInsets.symmetric(
-                                                      vertical: 16,
-                                                    ),
+                                              decoration: _fieldDecoration(
+                                                hint: 'email@example.com',
+                                                icon: Icons.mail_outline,
                                               ),
                                             ),
-                                            Divider(
-                                              height: 1,
-                                              color: Colors.grey[200],
-                                            ),
-
+                                            const _FieldDivider(),
                                             TextFormField(
                                               controller: _password,
                                               obscureText: _obscurePassword,
@@ -283,17 +280,9 @@ class _SignupScreenState extends State<SignupScreen> {
                                                   (v == null || v.length < 6)
                                                   ? 'Password must be at least 6 characters'
                                                   : null,
-                                              decoration: InputDecoration(
-                                                hintText: 'Password',
-                                                hintStyle: TextStyle(
-                                                  color: Colors.black38,
-                                                  fontSize: 14,
-                                                ),
-                                                prefixIcon: const Icon(
-                                                  Icons.lock_outline,
-                                                  color: Color(0xFFF8AE2B),
-                                                  size: 25,
-                                                ),
+                                              decoration: _fieldDecoration(
+                                                hint: 'Password',
+                                                icon: Icons.lock_outline,
                                                 suffixIcon: IconButton(
                                                   icon: Icon(
                                                     _obscurePassword
@@ -308,11 +297,6 @@ class _SignupScreenState extends State<SignupScreen> {
                                                     });
                                                   },
                                                 ),
-                                                border: InputBorder.none,
-                                                contentPadding:
-                                                    const EdgeInsets.symmetric(
-                                                      vertical: 16,
-                                                    ),
                                               ),
                                             ),
                                           ],
@@ -380,6 +364,18 @@ class _SignupScreenState extends State<SignupScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _FieldDivider extends StatelessWidget {
+  const _FieldDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Padding(
+      padding: EdgeInsets.fromLTRB(16, 2, 16, 2),
+      child: Divider(height: 1, thickness: 1, color: Color(0xFFEEEEEE)),
     );
   }
 }

@@ -9,11 +9,6 @@ class ChangePasswordView extends StatefulWidget {
 }
 
 class _ChangePasswordViewState extends State<ChangePasswordView> {
-  static const _navy = Color(0xFF14304A);
-  static const _page = Color(0xFFEAF5FF);
-  static const _header = Color(0xFF9AD5FF);
-  static const _button = Color(0xFF67B5FF);
-
   final _formKey = GlobalKey<FormState>();
   final _current = TextEditingController();
   final _next = TextEditingController();
@@ -61,15 +56,16 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
     required String? Function(String?) validator,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
+      padding: const EdgeInsets.only(bottom: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
             style: const TextStyle(
-              fontWeight: FontWeight.w500,
-              color: _navy,
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF14181B),
               fontSize: 14,
             ),
           ),
@@ -77,21 +73,37 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFF14181B), width: 1.8),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0xFF14181B),
+                  offset: Offset(0, 4),
+                  blurRadius: 0,
+                ),
+              ],
             ),
             child: TextFormField(
               controller: controller,
               obscureText: hidden,
               validator: validator,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF14181B),
+              ),
               decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.lock_outline, color: Colors.grey),
+                prefixIcon: const Icon(
+                  Icons.lock_outline,
+                  color: Color(0xFF22A2F2),
+                ),
                 suffixIcon: IconButton(
                   onPressed: onToggle,
                   icon: Icon(
                     hidden
                         ? Icons.visibility_off_outlined
                         : Icons.visibility_outlined,
-                    color: Colors.grey,
+                    color: const Color(0xFF14181B),
                   ),
                 ),
                 border: InputBorder.none,
@@ -110,170 +122,206 @@ class _ChangePasswordViewState extends State<ChangePasswordView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _page,
+      backgroundColor: const Color(0xFFF3FAFF),
       body: Stack(
         children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 200,
+          const Positioned.fill(
+            child: DecoratedBox(
               decoration: BoxDecoration(
-                color: _header,
-                borderRadius: BorderRadius.vertical(
-                  bottom: Radius.elliptical(
-                    MediaQuery.of(context).size.width,
-                    150,
-                  ),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFDDF1FF), Color(0xFFF3FAFF)],
                 ),
               ),
+              child: CustomPaint(painter: _DotGridPainter()),
             ),
           ),
           SafeArea(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-                child: TextButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
-                    Icons.arrow_back_ios,
-                    size: 16,
-                    color: _navy,
-                  ),
-                  label: const Text(
-                    'Back',
-                    style: TextStyle(
-                      color: _navy,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.transparent,
-                    foregroundColor: _navy,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.only(top: 60),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Form(
-                  key: _formKey,
-                  child: Column(
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 20, 0),
+                  child: Row(
                     children: [
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: Colors.black, width: 1),
+                      Material(
+                        color: Colors.white,
+                        shape: const CircleBorder(
+                          side: BorderSide(color: Color(0xFF14181B), width: 1.4),
                         ),
-                        child: const Icon(
-                          Icons.lock_outline,
-                          size: 48,
-                          color: _navy,
-                        ),
-                      ),
-                      const SizedBox(height: 24),
-                      const Text(
-                        'Change password',
-                        style: TextStyle(
-                          color: _navy,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      const Text(
-                        'Use a new password that is different from your current one.',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(color: _navy, fontSize: 14),
-                      ),
-                      const SizedBox(height: 32),
-                      _passwordField(
-                        label: 'Current password',
-                        controller: _current,
-                        hidden: _hideCurrent,
-                        onToggle: () =>
-                            setState(() => _hideCurrent = !_hideCurrent),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Enter your current password';
-                          }
-                          return null;
-                        },
-                      ),
-                      _passwordField(
-                        label: 'New password',
-                        controller: _next,
-                        hidden: _hideNext,
-                        onToggle: () => setState(() => _hideNext = !_hideNext),
-                        validator: (value) {
-                          if (value == null || value.length < 6) {
-                            return 'Use at least 6 characters';
-                          }
-                          if (value == _current.text) {
-                            return 'Choose a different password';
-                          }
-                          return null;
-                        },
-                      ),
-                      _passwordField(
-                        label: 'Confirm new password',
-                        controller: _confirm,
-                        hidden: _hideConfirm,
-                        onToggle: () =>
-                            setState(() => _hideConfirm = !_hideConfirm),
-                        validator: (value) {
-                          if (value != _next.text) {
-                            return 'Passwords do not match';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: _button,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          onPressed: _saving ? null : _save,
-                          child: Text(
-                            _saving ? 'Saving...' : 'Save Changes',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: () => Navigator.pop(context),
+                          child: const SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              color: Color(0xFF14181B),
+                              size: 20,
                             ),
                           ),
                         ),
                       ),
-                      const SizedBox(height: 40),
+                      const Expanded(
+                        child: Text(
+                          'Change password',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF14181B),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 40),
                     ],
                   ),
                 ),
-              ),
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          Container(
+                            width: 104,
+                            height: 104,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: const Color(0xFF14181B),
+                                width: 2.2,
+                              ),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0xFF14181B),
+                                  offset: Offset(0, 4),
+                                  blurRadius: 0,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.lock_outline,
+                              size: 42,
+                              color: Color(0xFF22A2F2),
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'Use a new password that is different from your current one.',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontFamily: 'Inter',
+                              color: Color(0xFF57636C),
+                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          _passwordField(
+                            label: 'Current password',
+                            controller: _current,
+                            hidden: _hideCurrent,
+                            onToggle: () =>
+                                setState(() => _hideCurrent = !_hideCurrent),
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'Enter your current password';
+                              }
+                              return null;
+                            },
+                          ),
+                          _passwordField(
+                            label: 'New password',
+                            controller: _next,
+                            hidden: _hideNext,
+                            onToggle: () =>
+                                setState(() => _hideNext = !_hideNext),
+                            validator: (value) {
+                              if (value == null || value.length < 6) {
+                                return 'Use at least 6 characters';
+                              }
+                              if (value == _current.text) {
+                                return 'Choose a different password';
+                              }
+                              return null;
+                            },
+                          ),
+                          _passwordField(
+                            label: 'Confirm new password',
+                            controller: _confirm,
+                            hidden: _hideConfirm,
+                            onToggle: () =>
+                                setState(() => _hideConfirm = !_hideConfirm),
+                            validator: (value) {
+                              if (value != _next.text) {
+                                return 'Passwords do not match';
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                          SizedBox(
+                            width: double.infinity,
+                            height: 52,
+                            child: ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFFFD86B),
+                                foregroundColor: const Color(0xFF14181B),
+                                elevation: 0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                  side: const BorderSide(
+                                    color: Color(0xFF14181B),
+                                    width: 1.8,
+                                  ),
+                                ),
+                              ),
+                              onPressed: _saving ? null : _save,
+                              child: Text(
+                                _saving ? 'Saving...' : 'Save Changes',
+                                style: const TextStyle(
+                                  fontFamily: 'Inter',
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _DotGridPainter extends CustomPainter {
+  const _DotGridPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF22A2F2).withValues(alpha: 0.10)
+      ..style = PaintingStyle.fill;
+    const spacing = 26.0;
+    for (double x = 14; x < size.width; x += spacing) {
+      for (double y = 14; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), 1.6, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

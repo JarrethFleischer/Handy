@@ -31,6 +31,9 @@ class AuthService {
     }
     accessToken = token;
     currentUserId = userId;
+    try {
+      await recordStreak();
+    } catch (_) {}
     return true;
   }
 
@@ -45,6 +48,7 @@ class AuthService {
   static Future<dynamic> login({
     required String username,
     required String password,
+    bool recordVisit = true,
   }) async {
     final data = await _post('/api/user/login', {
       'username': username,
@@ -60,6 +64,11 @@ class AuthService {
       currentUserId = userId;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_tokenKey, token);
+      if (recordVisit) {
+        try {
+          await recordStreak();
+        } catch (_) {}
+      }
     }
     return data;
   }
@@ -88,7 +97,11 @@ class AuthService {
     if (userId == null || username == null || username.isEmpty) {
       throw AuthException('You are not logged in.');
     }
-    await login(username: username, password: currentPassword);
+    await login(
+      username: username,
+      password: currentPassword,
+      recordVisit: false,
+    );
     await _post('/api/user/update/$userId', {
       'userPassword': newPassword,
     }, authorized: true);
@@ -110,6 +123,38 @@ class AuthService {
       throw AuthException('You are not logged in.');
     }
     return _post('/api/user/reset-xp/$userId', {}, authorized: true);
+  }
+
+  /// Tells the server this account was opened so today's streak can increase.
+  /// Sends `streak_count: 1` at most once per calendar day for this account.
+  static Future<dynamic> recordStreak() async {
+    final userId = currentUserId;
+    if (userId == null) {
+      throw AuthException('You are not logged in.');
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'streak_recorded_$userId';
+    final today = _todayKey();
+    if (prefs.getString(key) == today) return null;
+    final result = await _post('/api/user/$userId/streak', {
+      'streak_count': 1,
+    }, authorized: true);
+    await prefs.setString(key, today);
+    return result;
+  }
+
+  static String _todayKey() {
+    final now = DateTime.now();
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    return '${now.year}-$month-$day';
+  }
+
+  static Future<dynamic> restoreStreak() {
+    if (currentUserId == null) {
+      throw AuthException('You are not logged in.');
+    }
+    return _post('/api/user/streak/restore/', {}, authorized: true);
   }
 
   static Future<dynamic> deleteUser() {

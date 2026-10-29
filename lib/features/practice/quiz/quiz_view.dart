@@ -11,8 +11,20 @@ class QuizView extends StatefulWidget {
   State<QuizView> createState() => _QuizViewState();
 }
 
+class _QuizChapter {
+  const _QuizChapter({
+    required this.title,
+    required this.signs,
+    this.comingSoon = false,
+  });
+
+  final String title;
+  final List<String> signs;
+  final bool comingSoon;
+}
+
 class _QuizViewState extends State<QuizView> {
-  List<String> _quizItems = const [];
+  List<_QuizChapter> _chapters = const [];
   Set<String> _completed = {};
   bool _loading = true;
   String? _error;
@@ -49,8 +61,9 @@ class _QuizViewState extends State<QuizView> {
     });
     try {
       final chapters = await ChapterController().fetchChapters();
-      final labels = <String, String>{};
+      final groups = <_QuizChapter>[];
       for (final chapter in chapters) {
+        final labels = <String, String>{};
         for (final lesson in chapter.chapterStory.chapterContent) {
           for (final question in lesson.lessonQuestions) {
             final text = question.questionText.trim();
@@ -63,12 +76,21 @@ class _QuizViewState extends State<QuizView> {
             }
           }
         }
+        if (labels.isEmpty) continue;
+        final title = chapter.chapterStory.chapterTitle.trim();
+        groups.add(
+          _QuizChapter(
+            title: title.isEmpty ? 'Chapter ${chapter.chapterLevel}' : title,
+            signs: labels.values.toList(),
+            comingSoon: chapter.chapterLevel == 2,
+          ),
+        );
       }
       if (!mounted) return;
       final prefs = await SharedPreferences.getInstance();
       final saved = prefs.getStringList('quiz_completed') ?? [];
       setState(() {
-        _quizItems = labels.values.toList();
+        _chapters = groups;
         _completed = saved
             .where((item) => item.startsWith(_userPrefix))
             .map((item) => item.substring(_userPrefix.length))
@@ -339,25 +361,57 @@ class _QuizViewState extends State<QuizView> {
         ),
       );
     }
-    return ListView.builder(
-      itemCount: _quizItems.length,
+    return ListView(
       padding: const EdgeInsets.only(bottom: 90),
-      itemBuilder: (context, index) {
-        final label = _quizItems[index];
-        final isDone = _completed.contains(label);
-        final isLocked =
-            index > 0 && !_completed.contains(_quizItems[index - 1]);
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 12),
-          child: _QuizRowCard(
-            indexNumber: index + 1,
-            label: label,
-            isLocked: isLocked,
-            isDone: isDone,
-            onTap: isLocked ? null : () => _practiceSign(context, label),
+      children: [
+        for (final chapter in _chapters) ...[
+          Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 10),
+            child: Text(
+              chapter.comingSoon
+                  ? '${chapter.title} · Coming soon'
+                  : chapter.title,
+              style: TextStyle(
+                fontFamily: 'Inter',
+                color: chapter.comingSoon
+                    ? const Color(0xFF94A3B8)
+                    : const Color(0xFF14181B),
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
           ),
-        );
-      },
+          if (chapter.comingSoon)
+            const Padding(
+              padding: EdgeInsets.only(bottom: 12),
+              child: _QuizRowCard(
+                indexNumber: 0,
+                label: 'Coming soon',
+                isLocked: true,
+                isDone: false,
+                onTap: null,
+              ),
+            )
+          else
+            for (var index = 0; index < chapter.signs.length; index++)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _QuizRowCard(
+                  indexNumber: index + 1,
+                  label: chapter.signs[index],
+                  isLocked:
+                      index > 0 &&
+                      !_completed.contains(chapter.signs[index - 1]),
+                  isDone: _completed.contains(chapter.signs[index]),
+                  onTap:
+                      index > 0 &&
+                          !_completed.contains(chapter.signs[index - 1])
+                      ? null
+                      : () => _practiceSign(context, chapter.signs[index]),
+                ),
+              ),
+        ],
+      ],
     );
   }
 }

@@ -40,6 +40,7 @@ class CurrentUserProfile {
     required this.userUsername,
     required this.userXP,
     required this.userStreakCount,
+    required this.streakUpdated,
   });
 
   final int userID;
@@ -47,6 +48,7 @@ class CurrentUserProfile {
   final String userUsername;
   final int userXP;
   final int userStreakCount;
+  final String streakUpdated;
 
   factory CurrentUserProfile.fromJson(Map<String, dynamic> json) {
     final details = json['details'] as Map<String, dynamic>? ?? {};
@@ -56,6 +58,7 @@ class CurrentUserProfile {
       userUsername: json['userUsername'] as String? ?? '',
       userXP: (details['userDetailsXP'] as num?)?.toInt() ?? 0,
       userStreakCount: (details['userDetailsStreakCount'] as num?)?.toInt() ?? 0,
+      streakUpdated: details['userDetailsDateUpdated'] as String? ?? '',
     );
   }
 }

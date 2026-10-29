@@ -25,10 +25,8 @@ class FeedbackScreen extends StatefulWidget {
 }
 
 class _FeedbackScreenState extends State<FeedbackScreen> {
-  static const Color _navy = Color(0xFF14304A);
-  static const Color _page = Color(0xFFEAF5FF);
-  static const Color _header = Color(0xFF9AD5FF);
-  static const Color _button = Color(0xFF67B5FF);
+  static const Color _ink = Color(0xFF14181B);
+  static const Color _yellow = Color(0xFFFFD86B);
 
   final _formKey = GlobalKey<FormState>();
   final _content = TextEditingController();
@@ -87,10 +85,22 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => Dialog(
-        backgroundColor: Colors.white,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _ink, width: 1.8),
+            boxShadow: const [
+              BoxShadow(
+                color: _ink,
+                offset: Offset(0, 5),
+                blurRadius: 0,
+              ),
+            ],
+          ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -116,9 +126,10 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 message,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
+                  fontFamily: 'Inter',
                   fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: _navy,
+                  fontWeight: FontWeight.w800,
+                  color: _ink,
                 ),
               ),
               const SizedBox(height: 20),
@@ -128,16 +139,21 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(ctx),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: _button,
-                    foregroundColor: Colors.white,
+                    backgroundColor: _yellow,
+                    foregroundColor: _ink,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(14),
+                      side: const BorderSide(color: _ink, width: 1.8),
                     ),
                   ),
                   child: const Text(
                     'OK',
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                    style: TextStyle(
+                      fontFamily: 'Inter',
+                      fontWeight: FontWeight.w900,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
               ),
@@ -157,7 +173,11 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _ink, width: 1.8),
+        boxShadow: const [
+          BoxShadow(color: _ink, offset: Offset(0, 5), blurRadius: 0),
+        ],
       ),
       child: Form(
         key: _formKey,
@@ -171,22 +191,28 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                   child: Text(
                     'Feedback',
                     style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                      color: _navy,
+                      fontFamily: 'Inter',
+                      fontSize: 22,
+                      fontWeight: FontWeight.w900,
+                      color: _ink,
                     ),
                   ),
                 ),
                 if (widget.isDialog)
                   IconButton(
                     onPressed: () => Navigator.pop(context),
-                    icon: const Icon(Icons.close, color: _navy, size: 20),
+                    icon: const Icon(Icons.close, color: _ink, size: 20),
                   ),
               ],
             ),
             const Text(
               'How is Handy so far?',
-              style: TextStyle(fontSize: 14, color: _navy),
+              style: TextStyle(
+                fontFamily: 'Inter',
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF57636C),
+              ),
             ),
             const SizedBox(height: 16),
             Row(
@@ -201,8 +227,12 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                     height: 44,
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: isSelected ? _header : _page,
+                      color: isSelected ? _yellow : Colors.white,
                       shape: BoxShape.circle,
+                      border: Border.all(
+                        color: _ink,
+                        width: isSelected ? 1.8 : 1.2,
+                      ),
                     ),
                     child: Text(
                       _emojis[i],
@@ -223,28 +253,29 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                 setState(() => _selectedCategory = value);
               },
               style: const TextStyle(
-                color: _navy,
+                fontFamily: 'Inter',
+                color: _ink,
                 fontSize: 14,
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
               decoration: InputDecoration(
                 filled: true,
-                fillColor: _page,
+                fillColor: Colors.white,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
                   vertical: 14,
                 ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: _ink, width: 1.8),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: _ink, width: 1.8),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _button, width: 1.5),
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: _ink, width: 2),
                 ),
               ),
             ),
@@ -253,34 +284,43 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               controller: _content,
               minLines: 4,
               maxLines: 6,
-              style: const TextStyle(color: _navy, fontSize: 14),
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                color: _ink,
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+              ),
               decoration: InputDecoration(
                 hintText: 'Tell us what you think',
-                hintStyle: const TextStyle(color: Colors.black38, fontSize: 14),
+                hintStyle: const TextStyle(
+                  fontFamily: 'Inter',
+                  color: Color(0xFF57636C),
+                  fontSize: 14,
+                ),
                 filled: true,
-                fillColor: _page,
+                fillColor: Colors.white,
                 contentPadding: const EdgeInsets.all(16),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: _ink, width: 1.8),
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: BorderSide.none,
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: _ink, width: 1.8),
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: _button, width: 1.5),
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: _ink, width: 2),
                 ),
                 errorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  borderSide: const BorderSide(color: Color(0xFFC93B2B)),
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: Color(0xFFFF5252)),
                 ),
                 focusedErrorBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   borderSide: const BorderSide(
-                    color: Color(0xFFC93B2B),
-                    width: 1.5,
+                    color: Color(0xFFFF5252),
+                    width: 1.8,
                   ),
                 ),
               ),
@@ -294,12 +334,13 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
               child: ElevatedButton(
                 onPressed: _loading ? null : _submit,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _button,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: _header,
+                  backgroundColor: _yellow,
+                  foregroundColor: _ink,
+                  disabledBackgroundColor: const Color(0xFFFFE7A3),
                   elevation: 0,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(14),
+                    side: const BorderSide(color: _ink, width: 1.8),
                   ),
                 ),
                 child: _loading
@@ -308,14 +349,15 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
                         width: 22,
                         child: CircularProgressIndicator(
                           strokeWidth: 2.5,
-                          color: Colors.white,
+                          color: _ink,
                         ),
                       )
                     : const Text(
                         'Send Feedback',
                         style: TextStyle(
+                          fontFamily: 'Inter',
                           fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w900,
                         ),
                       ),
               ),
@@ -335,51 +377,68 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
 
     // Otherwise, render full screen with the Profile page's light-blue styling as fallback
     return Scaffold(
-      backgroundColor: _page,
+      backgroundColor: const Color(0xFFF3FAFF),
       body: Stack(
         children: [
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 200,
+          const Positioned.fill(
+            child: DecoratedBox(
               decoration: BoxDecoration(
-                color: _header,
-                borderRadius: BorderRadius.vertical(
-                  bottom: Radius.elliptical(
-                    MediaQuery.of(context).size.width,
-                    150,
-                  ),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: [Color(0xFFDDF1FF), Color(0xFFF3FAFF)],
                 ),
               ),
+              child: CustomPaint(painter: _DotGridPainter()),
             ),
           ),
           SafeArea(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextButton.icon(
-                  onPressed: () {
-                    if (Navigator.canPop(context)) Navigator.pop(context);
-                  },
-                  icon: const Icon(
-                    Icons.arrow_back_ios,
-                    size: 16,
-                    color: _navy,
-                  ),
-                  label: const Text(
-                    'Back',
-                    style: TextStyle(
-                      color: _navy,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 20, 0),
+                  child: Row(
+                    children: [
+                      Material(
+                        color: Colors.white,
+                        shape: const CircleBorder(
+                          side: BorderSide(color: _ink, width: 1.4),
+                        ),
+                        child: InkWell(
+                          customBorder: const CircleBorder(),
+                          onTap: () {
+                            if (Navigator.canPop(context)) Navigator.pop(context);
+                          },
+                          child: const SizedBox(
+                            width: 40,
+                            height: 40,
+                            child: Icon(
+                              Icons.arrow_back_rounded,
+                              color: _ink,
+                              size: 20,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const Expanded(
+                        child: Text(
+                          'Feedback',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: _ink,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 40),
+                    ],
                   ),
                 ),
                 Expanded(
                   child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 24),
                     child: _buildCardContent(context),
                   ),
                 ),
@@ -390,4 +449,24 @@ class _FeedbackScreenState extends State<FeedbackScreen> {
       ),
     );
   }
+}
+
+class _DotGridPainter extends CustomPainter {
+  const _DotGridPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF22A2F2).withValues(alpha: 0.10)
+      ..style = PaintingStyle.fill;
+    const spacing = 26.0;
+    for (double x = 14; x < size.width; x += spacing) {
+      for (double y = 14; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), 1.6, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

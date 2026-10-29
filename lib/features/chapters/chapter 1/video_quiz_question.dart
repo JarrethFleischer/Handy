@@ -137,15 +137,14 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
     final isCorrectOption = option == widget.correctAnswer;
 
     Color backgroundColor = Colors.white;
+    Color borderColor = const Color(0xFF14181B);
 
     if (!_hasSubmitted && isSelected) {
       backgroundColor = const Color(0xFFE0F7FF);
-    } else if (_hasSubmitted) {
-      if (isCorrectOption && isSelected) {
-        backgroundColor = const Color(0xFF00E676).withValues(alpha: 0.2);
-      } else if (isSelected) {
-        backgroundColor = const Color(0xFFFF5252).withValues(alpha: 0.15);
-      }
+    } else if (_hasSubmitted && isSelected && isCorrectOption) {
+      borderColor = const Color(0xFF00A86B);
+    } else if (_hasSubmitted && isSelected) {
+      borderColor = const Color(0xFFFF5252);
     }
 
     return Padding(
@@ -162,6 +161,8 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
                     _selectedAnswer = option;
                   });
                 },
+          splashColor: Colors.transparent,
+          highlightColor: Colors.transparent,
           // Interactive Button Style: Solid border with chunky bottom shadow
           child: Container(
             width: double.infinity,
@@ -169,7 +170,7 @@ class _VideoQuizQuestionState extends State<VideoQuizQuestion> {
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: backgroundColor,
-              border: Border.all(color: const Color(0xFF14181B), width: 1.8),
+              border: Border.all(color: borderColor, width: 1.8),
               borderRadius: BorderRadius.circular(14),
               boxShadow: const [
                 BoxShadow(

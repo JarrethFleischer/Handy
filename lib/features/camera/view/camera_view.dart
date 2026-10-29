@@ -385,8 +385,10 @@ class _CameraViewState extends State<CameraView> with WidgetsBindingObserver {
       xpEarned: passed ? widget.xpReward : 0,
     );
     if (!mounted) return;
-    if (accepted) {
+    if (accepted && passed) {
       Navigator.pop(context, true);
+    } else if (accepted) {
+      Navigator.pop(context, false);
     }
   }
 

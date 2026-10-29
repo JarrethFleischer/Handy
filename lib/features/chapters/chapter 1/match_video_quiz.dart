@@ -312,12 +312,8 @@ class _MatchVideoQuizState extends State<MatchVideoQuiz> {
         height: 52,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
-          color: answer == null
+          color: answer == null || _hasSubmitted
               ? Colors.white
-              : isCorrect
-              ? const Color(0xFF00E676).withValues(alpha: 0.18)
-              : isWrong
-              ? const Color(0xFFFF5252).withValues(alpha: 0.15)
               : const Color(0xFFE0F7FF),
           borderRadius: BorderRadius.circular(12),
           // Flat borders for answer slots (buttons get chunky shadows, slots stay clean)

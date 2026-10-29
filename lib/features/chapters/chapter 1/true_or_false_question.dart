@@ -335,21 +335,33 @@ class _AnswerButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final highlight = showResult ? isCorrectChoice : isSelected;
+    final showMark = showResult && isSelected;
+    final picked = !showResult && isSelected;
 
     return Material(
-      color: Colors.transparent,
+      color: picked ? const Color(0xFFE0F7FF) : Colors.white,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         borderRadius: BorderRadius.circular(14),
         onTap: onTap,
+        splashColor: Colors.transparent,
+        highlightColor: Colors.transparent,
         child: Container(
           height: 52,
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: highlight ? selectedColor : highlightColor,
+            color: picked ? const Color(0xFFE0F7FF) : Colors.white,
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: const Color(0xFF14181B), width: 1.8),
+            border: Border.all(
+              color: showMark
+                  ? (isCorrectChoice
+                        ? const Color(0xFF00A86B)
+                        : const Color(0xFFFF5252))
+                  : picked
+                  ? const Color(0xFF22A2F2)
+                  : const Color(0xFF14181B),
+              width: picked || showMark ? 2.4 : 1.8,
+            ),
             boxShadow: const [
               BoxShadow(
                 color: Color(0xFF14181B),
@@ -360,9 +372,9 @@ class _AnswerButton extends StatelessWidget {
           ),
           child: Text(
             label,
-            style: TextStyle(
+            style: const TextStyle(
               fontFamily: 'Inter',
-              color: textColor,
+              color: Color(0xFF14181B),
               fontSize: 16,
               fontWeight: FontWeight.w900,
             ),
