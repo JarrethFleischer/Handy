@@ -166,3 +166,7 @@ def updateStreak(
 )
 def logDailyActivity(userID: int, db: Session = Depends(getDB)):
     return User.logDailyActivity(userID, db)
+    
+@router.post("/reset-xp/{userID}", status_code=status.HTTP_200_OK)
+def resetUserXP(userID: int, db: Session = Depends(getDB)):
+    return User.resetUserXP(userID=userID, db=db)

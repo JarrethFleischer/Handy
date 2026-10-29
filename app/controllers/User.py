@@ -411,7 +411,7 @@ def restoreStreakWithXP(userID: int, xpCost: int, db: Session):
         existingBridge.bridgeDateUpdated = getMyyTime()
         
     db.commit()
-    db.refresh()
+    db.refresh(details)
     
     return {
         "status": "success",
@@ -419,4 +419,48 @@ def restoreStreakWithXP(userID: int, xpCost: int, db: Session):
         "remainingXP": details.userDetailsXP,
         "currentLevel": details.userDetailsLevel,
         "streakCount": details.userDetailsStreakCount
+    }
+    
+    
+def resetUserXP(userID: int, db: Session):
+    details = db.query(UserDetails).filter(UserDetails.userDetailsUserID == userID).first()
+    if not details:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"User details for user ID {userID} not found."
+        )
+
+    # 1. Reset XP and Level
+    details.userDetailsXP = 0
+    details.userDetailsLevel = calculateLevelFromTotalXP(0)  # Resolves to Level 1
+
+    # 2. Sync active chapter bridge progress to Chapter 1, progress "0"
+    currentChapter = details.userDetailsLevel
+    progressWithinChapter = "0"
+
+    existingBridge = db.query(bridge).filter(
+        bridge.bridgeUserID == userID,
+        bridge.bridgeChapterID == currentChapter
+    ).first()
+
+    if existingBridge:
+        existingBridge.bridgeProgress = progressWithinChapter
+        existingBridge.bridgeDateUpdated = getMyyTime()
+    else:
+        newBridge = bridge(
+            bridgeUserID=userID,
+            bridgeChapterID=currentChapter,
+            bridgeProgress=progressWithinChapter,
+            bridgeDateCreated=getMyyTime(),
+            bridgeDateUpdated=getMyyTime()
+        )
+        db.add(newBridge)
+
+    db.commit()
+    db.refresh(details)
+
+    return {
+        "status": "success",
+        "message": f"XP and level for user ID {userID} have been reset successfully.",
+        "details": UserDetailsResponse.model_validate(details)
     }

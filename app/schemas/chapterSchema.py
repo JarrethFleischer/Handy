@@ -1,24 +1,20 @@
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Union
 from pydantic import BaseModel, Field
 
 
 class QuestionSchema(BaseModel):
     questionNo: int
     questionTitle: str
-    questionText: Optional[str] = None  # Made optional for quiz-type questions
-    questionQuiz: Optional[List[str]] = (
-        None  # Fixed syntax error (replaced 'as' with ':')
-    )
-    questionVideo: Optional[str] = None
+    questionText: Optional[str] = None
+    questionQuiz: Optional[List[str]] = Field(default_factory=list)
+    questionVideo: Optional[Union[str, List[str]]] = None
 
 
 class LessonSchema(BaseModel):
     lessonNo: int
     lessonTitle: Optional[str] = None
-    lessonDesc: Optional[str] = (
-        None  # Made optional to prevent strict validation failures
-    )
+    lessonDesc: Optional[str] = None
     lessonQuestions: List[QuestionSchema]
 
 
