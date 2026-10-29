@@ -1,4 +1,6 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
+import 'package:handy/features/leaderboard/leaderboard_controller.dart';
+import 'package:handy/services/auth_service.dart';
 
 class EditProfileView extends StatefulWidget {
   const EditProfileView({super.key});
@@ -10,10 +12,50 @@ class EditProfileView extends StatefulWidget {
 }
 
 class _EditProfileViewState extends State<EditProfileView> {
-  final _username = TextEditingController(text: 'Danish Syazwi');
+  final _controller = LeaderboardController();
+  final _username = TextEditingController();
   final _phone = TextEditingController(text: '(+60) 19 848 7025');
-  final _email = TextEditingController(text: 'danish25122004@gmail.com');
-  final _bio = TextEditingController(text: 'Kongkek For LIFE!!');
+  final _email = TextEditingController();
+  final _bio = TextEditingController(text: 'Kongkek For Jarreth LIFE!!');
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  bool _saving = false;
+
+  Future<void> _save() async {
+    FocusScope.of(context).unfocus();
+    setState(() => _saving = true);
+    try {
+      await AuthService.updateUser(
+        name: _username.text.trim(),
+        email: _email.text.trim(),
+      );
+      if (!mounted) return;
+      Navigator.pop(context);
+    } on AuthException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+      );
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _load() async {
+    try {
+      final userId = AuthService.currentUserId;
+      if (userId == null) return;
+      final profile = await _controller.fetchCurrentUser(userId);
+      if (!mounted) return;
+      _username.text = profile.userName;
+      _email.text = profile.userUsername;
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -31,15 +73,16 @@ class _EditProfileViewState extends State<EditProfileView> {
     int maxLines = 1,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20.0),
+      padding: const EdgeInsets.only(bottom: 18),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
             style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              color: Color(0xFF14304A),
+              fontFamily: 'Inter',
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF14181B),
               fontSize: 14,
             ),
           ),
@@ -47,14 +90,26 @@ class _EditProfileViewState extends State<EditProfileView> {
           Container(
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.black, width: 1.5),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0xFF14181B), width: 1.8),
+              boxShadow: const [
+                BoxShadow(
+                  color: Color(0xFF14181B),
+                  offset: Offset(0, 4),
+                  blurRadius: 0,
+                ),
+              ],
             ),
             child: TextFormField(
               controller: controller,
               maxLines: maxLines,
+              style: const TextStyle(
+                fontFamily: 'Inter',
+                fontWeight: FontWeight.w600,
+                color: Color(0xFF14181B),
+              ),
               decoration: InputDecoration(
-                prefixIcon: Icon(icon, color: Colors.grey),
+                prefixIcon: Icon(icon, color: const Color(0xFF22A2F2)),
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
                   horizontal: 16,
@@ -71,177 +126,184 @@ class _EditProfileViewState extends State<EditProfileView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFEAF5FF), // Light blue background
+      backgroundColor: const Color(0xFFF3FAFF),
       body: Stack(
         children: [
-          // 1. THE CURVED HEADER BACKGROUND
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 240,
-              decoration: BoxDecoration(
-                color: const Color(0xFF9AD5FF),
-                borderRadius: BorderRadius.vertical(
-                  bottom: Radius.elliptical(
-                    MediaQuery.of(context).size.width,
-                    120,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // 2. THE TOP-LEFT BACK BUTTON
+          const Positioned.fill(child: _EditBackdrop()),
           SafeArea(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8.0,
-                  vertical: 8.0,
-                ),
-                child: TextButton.icon(
-                  onPressed: () => Navigator.pop(context),
-                  icon: const Icon(
-                    Icons.arrow_back_ios,
-                    size: 16,
-                    color: Color(0xFF14304A),
-                  ),
-                  label: const Text(
-                    'Back',
-                    style: TextStyle(
-                      color: Color(0xFF14304A),
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.transparent, // No background
-                    foregroundColor: const Color(0xFF14304A),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
+            child: Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 8, 20, 0),
+                  child: Row(
+                    children: [
+                      _RoundIconButton(
+                        icon: Icons.arrow_back_rounded,
+                        onPressed: () => Navigator.pop(context),
+                      ),
+                      const Expanded(
+                        child: Text(
+                          'Edit profile',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontFamily: 'Inter',
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xFF14181B),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 40),
+                    ],
                   ),
                 ),
-              ),
-            ),
-          ),
-
-          // 3. THE MAIN SCROLLABLE FORM
-          SafeArea(
-            child: Padding(
-              // Pushes the content down so it doesn't overlap the back button
-              padding: const EdgeInsets.only(top: 60.0),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  children: [
-                    // --- EDITABLE AVATAR ---
-                    Stack(
-                      alignment: Alignment.bottomRight,
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+                    child: Column(
                       children: [
                         Container(
-                          width: 120,
-                          height: 120,
+                          width: 104,
+                          height: 104,
                           decoration: BoxDecoration(
                             color: Colors.white,
                             shape: BoxShape.circle,
-                            border: Border.all(color: Colors.black, width: 2),
+                            border: Border.all(
+                              color: const Color(0xFF14181B),
+                              width: 2.2,
+                            ),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0xFF14181B),
+                                offset: Offset(0, 4),
+                                blurRadius: 0,
+                              ),
+                            ],
                           ),
-                          padding: const EdgeInsets.all(4.0),
                           child: ClipOval(
-                            child: Image.asset(
-                              'assets/images/profile_pic.png',
-                              fit: BoxFit.cover,
+                            child: Padding(
+                              padding: const EdgeInsets.all(4.5),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'assets/images/profile_pic.png',
+                                  fit: BoxFit.cover,
+                                ),
+                              ),
                             ),
                           ),
                         ),
-                        // Tiny floating camera icon
-                        Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFFFFD465,
-                            ), // Yellow from your theme
-                            shape: BoxShape.circle,
-                            border: Border.all(color: Colors.black, width: 1.5),
-                          ),
-                          child: const Icon(
-                            Icons.camera_alt,
-                            color: Colors.black87,
-                            size: 20,
+                        const SizedBox(height: 28),
+                        _buildTextField(
+                          'Username',
+                          Icons.person_outline,
+                          _username,
+                        ),
+                        _buildTextField(
+                          'Email Address',
+                          Icons.email_outlined,
+                          _email,
+                        ),
+                        const SizedBox(height: 8),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 52,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFFD86B),
+                              foregroundColor: const Color(0xFF14181B),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                side: const BorderSide(
+                                  color: Color(0xFF14181B),
+                                  width: 1.8,
+                                ),
+                              ),
+                            ),
+                            onPressed: _saving ? null : _save,
+                            child: Text(
+                              _saving ? 'Saving...' : 'Save Changes',
+                              style: const TextStyle(
+                                fontFamily: 'Inter',
+                                fontWeight: FontWeight.w900,
+                                fontSize: 16,
+                              ),
+                            ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 32),
-
-                    // --- FORM FIELDS ---
-                    _buildTextField(
-                      'Username',
-                      Icons.person_outline,
-                      _username,
-                    ),
-                    _buildTextField(
-                      'Phone Number',
-                      Icons.phone_outlined,
-                      _phone,
-                    ),
-                    _buildTextField(
-                      'Email Address',
-                      Icons.email_outlined,
-                      _email,
-                    ),
-                    _buildTextField(
-                      'About Me',
-                      Icons.edit_note,
-                      _bio,
-                      maxLines: 3,
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // --- SAVE BUTTON ---
-                    SizedBox(
-                      width: double.infinity,
-                      height: 56,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF67B5FF),
-                          foregroundColor: Colors.white,
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: const BorderSide(
-                              color: Colors.black,
-                              width: 1.5,
-                            ),
-                          ),
-                        ),
-                        onPressed: () {
-                          FocusScope.of(context).unfocus();
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
-                          'Save Changes',
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 18,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 40),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
         ],
       ),
     );
   }
+}
+
+class _RoundIconButton extends StatelessWidget {
+  const _RoundIconButton({required this.icon, required this.onPressed});
+
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white,
+      shape: const CircleBorder(
+        side: BorderSide(color: Color(0xFF14181B), width: 1.4),
+      ),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: SizedBox(
+          width: 40,
+          height: 40,
+          child: Icon(icon, color: const Color(0xFF14181B), size: 20),
+        ),
+      ),
+    );
+  }
+}
+
+class _EditBackdrop extends StatelessWidget {
+  const _EditBackdrop();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFFDDF1FF), Color(0xFFF3FAFF)],
+        ),
+      ),
+      child: CustomPaint(painter: _DotGridPainter()),
+    );
+  }
+}
+
+class _DotGridPainter extends CustomPainter {
+  const _DotGridPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0xFF22A2F2).withValues(alpha: 0.10)
+      ..style = PaintingStyle.fill;
+    const spacing = 26.0;
+    for (double x = 14; x < size.width; x += spacing) {
+      for (double y = 14; y < size.height; y += spacing) {
+        canvas.drawCircle(Offset(x, y), 1.6, paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
