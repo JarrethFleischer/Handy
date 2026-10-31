@@ -61,6 +61,11 @@ class _LessonFlowState extends State<LessonFlow> {
         // The lesson still finishes if the points request fails.
       }
     }
+    try {
+      await AuthService.recordStreak();
+    } catch (error) {
+      debugPrint('Streak activity could not be logged: $error');
+    }
     if (!mounted) return;
     final total = widget.questions.length;
     final score = total == 0 ? 0.0 : _correctCount / total;

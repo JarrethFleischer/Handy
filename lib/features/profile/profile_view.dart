@@ -26,7 +26,30 @@ class _ProfileViewState extends State<ProfileView> {
   @override
   void initState() {
     super.initState();
+    AuthService.streakCount.addListener(_syncStreakCount);
     if (widget.isActive) _load();
+  }
+
+  @override
+  void dispose() {
+    AuthService.streakCount.removeListener(_syncStreakCount);
+    super.dispose();
+  }
+
+  void _syncStreakCount() {
+    final count = AuthService.streakCount.value;
+    final profile = _profile;
+    if (count == null || profile == null || !mounted) return;
+    setState(() {
+      _profile = CurrentUserProfile(
+        userID: profile.userID,
+        userName: profile.userName,
+        userUsername: profile.userUsername,
+        userXP: profile.userXP,
+        userStreakCount: count,
+        streakUpdated: DateTime.now().toIso8601String(),
+      );
+    });
   }
 
   @override

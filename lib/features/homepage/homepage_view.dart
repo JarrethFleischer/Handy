@@ -115,6 +115,25 @@ class _HomepageViewState extends State<HomepageView> {
   String? _error;
 
   @override
+  void initState() {
+    super.initState();
+    _userStreakCount = AuthService.streakCount.value ?? _userStreakCount;
+    AuthService.streakCount.addListener(_syncStreakCount);
+  }
+
+  @override
+  void dispose() {
+    AuthService.streakCount.removeListener(_syncStreakCount);
+    super.dispose();
+  }
+
+  void _syncStreakCount() {
+    final count = AuthService.streakCount.value;
+    if (count == null || !mounted) return;
+    setState(() => _userStreakCount = count);
+  }
+
+  @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     if (_didStartLoading) {
@@ -540,9 +559,11 @@ class _HomepageViewState extends State<HomepageView> {
                                       final profile = await _userController
                                           .fetchCurrentUser(userId);
                                       if (mounted) {
-                                        setState(
-                                          () => _userXP = profile.userXP,
-                                        );
+                                        setState(() {
+                                          _userXP = profile.userXP;
+                                          _userStreakCount =
+                                              profile.userStreakCount;
+                                        });
                                       }
                                     } catch (_) {}
                                   }

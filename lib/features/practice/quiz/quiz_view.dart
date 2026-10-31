@@ -113,6 +113,11 @@ class _QuizViewState extends State<QuizView> {
       xpReward: _completed.contains(sign) ? 0 : 100,
     );
     if (passed != true || !context.mounted) return;
+    try {
+      await AuthService.recordStreak();
+    } catch (error) {
+      debugPrint('Streak activity could not be logged: $error');
+    }
     final alreadyDone = _completed.contains(sign);
     if (!alreadyDone) {
       try {

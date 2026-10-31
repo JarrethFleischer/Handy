@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Simple API client for login / sign up / forgot password.
@@ -14,6 +15,10 @@ class AuthService {
   /// Signed-in account, taken from the JWT `sub` claim.
   static int? currentUserId;
   static String? accessToken;
+
+  /// Latest streak count returned by the server, so streak UI can update
+  /// immediately instead of waiting for the next profile fetch.
+  static final ValueNotifier<int?> streakCount = ValueNotifier<int?>(null);
 
   /// Loads a saved token from the last login. Returns false when missing or expired.
   static Future<bool> restoreSession() async {
@@ -31,15 +36,13 @@ class AuthService {
     }
     accessToken = token;
     currentUserId = userId;
-    try {
-      await recordStreak();
-    } catch (_) {}
     return true;
   }
 
   static Future<void> logout() async {
     currentUserId = null;
     accessToken = null;
+    streakCount.value = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_tokenKey);
   }
@@ -48,7 +51,6 @@ class AuthService {
   static Future<dynamic> login({
     required String username,
     required String password,
-    bool recordVisit = true,
   }) async {
     final data = await _post('/api/user/login', {
       'username': username,
@@ -64,11 +66,6 @@ class AuthService {
       currentUserId = userId;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_tokenKey, token);
-      if (recordVisit) {
-        try {
-          await recordStreak();
-        } catch (_) {}
-      }
     }
     return data;
   }
@@ -100,7 +97,6 @@ class AuthService {
     await login(
       username: username,
       password: currentPassword,
-      recordVisit: false,
     );
     await _post('/api/user/update/$userId', {
       'userPassword': newPassword,
@@ -125,36 +121,37 @@ class AuthService {
     return _post('/api/user/reset-xp/$userId', {}, authorized: true);
   }
 
-  /// Tells the server this account was opened so today's streak can increase.
-  /// Sends `streak_count: 1` at most once per calendar day for this account.
-  static Future<dynamic> recordStreak() async {
+  /// Records that the user completed a quiz today. The server increments the
+  /// streak once per calendar day and ignores repeat calls that day. Only call
+  /// this after a quiz is completed; login, sign-up, and app open must not
+  /// count as activity.
+  /// Returns the current streak count when the server provides it.
+  static Future<int?> recordStreak() async {
     final userId = currentUserId;
     if (userId == null) {
       throw AuthException('You are not logged in.');
     }
-    final prefs = await SharedPreferences.getInstance();
-    final key = 'streak_recorded_$userId';
-    final today = _todayKey();
-    if (prefs.getString(key) == today) return null;
-    final result = await _post('/api/user/$userId/streak', {
-      'streak_count': 1,
-    }, authorized: true);
-    await prefs.setString(key, today);
-    return result;
-  }
-
-  static String _todayKey() {
-    final now = DateTime.now();
-    final month = now.month.toString().padLeft(2, '0');
-    final day = now.day.toString().padLeft(2, '0');
-    return '${now.year}-$month-$day';
+    final result = await _post(
+      '/api/user/$userId/log-activity',
+      {},
+      authorized: true,
+    );
+    int? count;
+    if (result is Map && result['streak_count'] is num) {
+      count = (result['streak_count'] as num).toInt();
+    }
+    if (count != null) {
+      streakCount.value = count;
+    }
+    return count;
   }
 
   static Future<dynamic> restoreStreak() {
-    if (currentUserId == null) {
+    final userId = currentUserId;
+    if (userId == null) {
       throw AuthException('You are not logged in.');
     }
-    return _post('/api/user/streak/restore/', {}, authorized: true);
+    return _post('/api/user/streak/restore/$userId', {}, authorized: true);
   }
 
   static Future<dynamic> deleteUser() {
